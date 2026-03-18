@@ -3,5 +3,5 @@
   "container.exchange.trade.complete": "Trade completed!",
   "container.exchange.trade.cancelled": "Trade cancelled!",
   "message.exchange.trade.occupied": "This player is currently trading with someone else.",
-  "message.exchange.trade.distance": "Move closer to the player you want to trade with.",
+  "message.exchange.trade.distance": "Move closer to the player you want to trade with."
 }

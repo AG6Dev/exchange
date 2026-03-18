@@ -5,7 +5,6 @@ import dev.ag6.exchange.network.TradeRequestPayload
 import dev.ag6.exchange.trade.TradeManager
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.network.chat.Component
 
 object NetworkInit {
     private fun registerC2SPayloads() {
