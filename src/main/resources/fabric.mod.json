@@ -1,0 +1,45 @@
+{
+	"schemaVersion": 1,
+	"id": "exchange",
+	"version": "${version}",
+	"name": "Exchange",
+	"description": "A Fabric mod which adds features to exchange items between players. Including player-to-player trading and a market system.",
+	"authors": [
+		"AG6"
+	],
+	"contact": {
+		"homepage": "https://github.com/AG6Dev/exchange",
+		"sources": "https://github.com/AG6Dev/exchange"
+	},
+	"license": "MIT License",
+	"icon": "assets/exchange/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			{
+				"value": "dev.ag6.exchange.Exchange",
+				"adapter": "kotlin"
+			}
+		],
+		"client": [
+			{
+				"value": "dev.ag6.exchange.ExchangeClient",
+				"adapter": "kotlin"
+			}
+		]
+	},
+	"mixins": [
+		"exchange.mixins.json",
+		{
+			"config": "exchange.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*",
+		"fabric-language-kotlin": "*"
+	}
+}
