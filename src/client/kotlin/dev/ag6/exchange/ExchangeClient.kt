@@ -13,7 +13,7 @@ import net.minecraft.world.entity.player.Player
 object ExchangeClient : ClientModInitializer {
     override fun onInitializeClient() {
         KeyMappingInit.init()
-        MenuScreens.register(MenuTypeInit.TRADE_CONTAINER_SCREEN, ::TradeScreen)
+        MenuScreens.register(MenuTypeInit.TRADE, ::TradeScreen)
 
         ClientTickEvents.END_CLIENT_TICK.register { client ->
             while (KeyMappingInit.tradeKey.consumeClick()) {

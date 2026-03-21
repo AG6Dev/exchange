@@ -18,7 +18,7 @@ class TradeMenu private constructor(
     private val localOfferContainer: SimpleContainer,
     private val remoteOfferContainer: SimpleContainer,
     private val session: TradeSession?
-) : AbstractContainerMenu(MenuTypeInit.TRADE_CONTAINER_SCREEN, syncId) {
+) : AbstractContainerMenu(MenuTypeInit.TRADE, syncId) {
     val statusData = SimpleContainerData(2)
 
     val localAccepted: Boolean
