@@ -29,10 +29,15 @@ class ExchangeTerminalBlock(properties: Properties) : BaseEntityBlock(properties
 
         val blockEntity = level.getBlockEntity(blockPos)
         if (blockEntity is ExchangeTerminalBlockEntity) {
+
+            if(blockEntity.owner == null) {
+                blockEntity.owner = player.uuid
+            }
+
             player.openMenu(blockEntity)
         }
 
-        return InteractionResult.SUCCESS
+        return super.useItemOn(itemStack, blockState, level, blockPos, player, interactionHand, blockHitResult)
     }
 
     override fun codec(): MapCodec<out BaseEntityBlock> = CODEC

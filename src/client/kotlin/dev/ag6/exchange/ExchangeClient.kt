@@ -3,6 +3,7 @@ package dev.ag6.exchange
 import dev.ag6.exchange.init.MenuTypeInit
 import dev.ag6.exchange.init.KeyMappingInit
 import dev.ag6.exchange.network.TradeRequestPayload
+import dev.ag6.exchange.screen.ExchangeTerminalScreen
 import dev.ag6.exchange.screen.TradeScreen
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
@@ -13,7 +14,9 @@ import net.minecraft.world.entity.player.Player
 object ExchangeClient : ClientModInitializer {
     override fun onInitializeClient() {
         KeyMappingInit.init()
+
         MenuScreens.register(MenuTypeInit.TRADE, ::TradeScreen)
+        MenuScreens.register(MenuTypeInit.EXCHANGE_TERMINAL, ::ExchangeTerminalScreen)
 
         ClientTickEvents.END_CLIENT_TICK.register { client ->
             while (KeyMappingInit.tradeKey.consumeClick()) {

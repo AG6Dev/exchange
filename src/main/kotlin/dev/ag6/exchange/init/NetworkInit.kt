@@ -1,6 +1,9 @@
 package dev.ag6.exchange.init
 
 import dev.ag6.exchange.Exchange
+import dev.ag6.exchange.blockentity.ExchangeTerminalBlockEntity
+import dev.ag6.exchange.menu.ExchangeTerminalMenu
+import dev.ag6.exchange.network.AddOfferPayload
 import dev.ag6.exchange.network.TradeRequestPayload
 import dev.ag6.exchange.trade.TradeManager
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
@@ -9,6 +12,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 object NetworkInit {
     private fun registerC2SPayloads() {
         PayloadTypeRegistry.playC2S().register(TradeRequestPayload.TYPE, TradeRequestPayload.STREAM_CODEC)
+        PayloadTypeRegistry.playC2S().register(AddOfferPayload.TYPE, AddOfferPayload.STREAM_CODEC)
     }
 
     private fun registerS2CPayloads() {
@@ -38,6 +42,18 @@ object NetworkInit {
                 }
 
                 session.openMenus()
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(AddOfferPayload.TYPE) { payload, context ->
+            val requester = context.player()
+            val menu = requester.containerMenu
+            if(menu is ExchangeTerminalMenu) {
+                val be = requester.level().getBlockEntity(menu.pos)
+
+                if(be is ExchangeTerminalBlockEntity) {
+                    be.addOffer(payload.itemsGiving, payload.itemsWanted)
+                }
             }
         }
     }
