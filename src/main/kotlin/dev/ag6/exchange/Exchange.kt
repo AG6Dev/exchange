@@ -2,6 +2,7 @@ package dev.ag6.exchange
 
 import dev.ag6.exchange.init.BlockEntityInit
 import dev.ag6.exchange.init.BlockInit
+import dev.ag6.exchange.init.ItemInit
 import dev.ag6.exchange.init.MenuTypeInit
 import dev.ag6.exchange.init.NetworkInit
 import net.fabricmc.api.ModInitializer
@@ -20,6 +21,7 @@ object Exchange : ModInitializer {
     override fun onInitialize() {
         LOGGER.info("Exchange Mod initializing...")
 
+        ItemInit.init()
         BlockInit.init()
         BlockEntityInit.init()
         MenuTypeInit.init()
