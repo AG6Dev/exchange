@@ -2,6 +2,8 @@
   "container.exchange.trade": "Trading with %s",
   "container.exchange.trade.complete": "Trade completed!",
   "container.exchange.trade.cancelled": "Trade cancelled!",
+  "container.exchange.trade.cancelled_by_partner": "Trade cancelled by the other player.",
+  "container.exchange.trade.partner_left": "Trade closed because the other player left the trade.",
   "message.exchange.trade.occupied": "This player is currently trading with someone else.",
   "message.exchange.trade.distance": "Move closer to the player you want to trade with.",
 

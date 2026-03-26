@@ -25,6 +25,11 @@ object NetworkInit {
             val server = context.server()
 
             server.execute {
+                if (TradeManager.getSession(requester) != null) {
+                    requester.sendSystemMessage(Exchange.translatable("message", "trade.occupied"))
+                    return@execute
+                }
+
                 val target = server.playerList.getPlayer(payload.targetPlayerId)
                 if (target == null || target == requester || target.level() != requester.level()) {
                     return@execute

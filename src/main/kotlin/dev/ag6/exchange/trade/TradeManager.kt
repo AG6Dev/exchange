@@ -21,6 +21,8 @@ object TradeManager {
         }
     }
 
+    fun getSession(player: ServerPlayer): TradeSession? = sessionsByPlayer[player.uuid]
+
     fun removeSession(session: TradeSession) {
         sessionsByPlayer.entries.removeIf { (_, activeSession) -> activeSession === session }
     }

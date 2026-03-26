@@ -7,7 +7,6 @@ import net.minecraft.world.SimpleContainer
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.world.inventory.ClickType
 import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.ItemStack
@@ -55,23 +54,13 @@ class TradeMenu private constructor(
     }
 
     override fun stillValid(player: Player): Boolean {
-        return session?.isParticipant(player) ?: true
-    }
-
-    override fun clicked(slotId: Int, button: Int, clickType: ClickType, player: Player) {
-        val before = snapshotOffers()
-        super.clicked(slotId, button, clickType, player)
-
-        if (session != null && before != snapshotOffers()) {
-            session.onOffersChanged()
-        }
+        return session?.isActiveFor(player) ?: true
     }
 
     override fun quickMoveStack(player: Player, slotId: Int): ItemStack {
         val slot = slots.getOrNull(slotId) ?: return ItemStack.EMPTY
         if (!slot.hasItem()) return ItemStack.EMPTY
 
-        val before = snapshotOffers()
         val originalStack = slot.item
         val movedStack = originalStack.copy()
 
@@ -103,10 +92,6 @@ class TradeMenu private constructor(
 
         slot.onTake(player, originalStack)
 
-        if (session != null && before != snapshotOffers()) {
-            session.onOffersChanged()
-        }
-
         return movedStack
     }
 
@@ -121,7 +106,7 @@ class TradeMenu private constructor(
             }
 
             BUTTON_CANCEL_ID -> {
-                activeSession.cancelTrade(serverPlayer)
+                activeSession.cancel(serverPlayer)
                 true
             }
 
@@ -167,15 +152,6 @@ class TradeMenu private constructor(
         repeat(9) { hotbarSlot ->
             addSlot(Slot(playerInventory, hotbarSlot, 8 + hotbarSlot * 18, 142))
         }
-    }
-
-    private fun snapshotOffers(): List<ItemStack> {
-        val stacks = ArrayList<ItemStack>(OFFER_SLOT_COUNT * 2)
-        repeat(OFFER_SLOT_COUNT) { index ->
-            stacks += localOfferContainer.getItem(index).copy()
-            stacks += remoteOfferContainer.getItem(index).copy()
-        }
-        return stacks
     }
 
     private class RemoteOfferSlot(container: SimpleContainer, slot: Int, x: Int, y: Int) : Slot(container, slot, x, y) {

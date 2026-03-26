@@ -15,34 +15,44 @@ import java.util.*
 class TradeSession(
     private val firstPlayer: ServerPlayer, private val secondPlayer: ServerPlayer
 ) {
-    private val firstOfferContainer = SimpleContainer(TradeMenu.OFFER_SLOT_COUNT)
-    private val secondOfferContainer = SimpleContainer(TradeMenu.OFFER_SLOT_COUNT)
+    private val firstOfferContainer = OfferContainer(firstPlayer.uuid) { onOfferChanged(firstPlayer) }
+    private val secondOfferContainer = OfferContainer(secondPlayer.uuid) { onOfferChanged(secondPlayer) }
     private val openMenus = mutableMapOf<UUID, TradeMenu>()
 
+    private var state = State.PENDING
     private var firstAccepted = false
     private var secondAccepted = false
-    private var finished = false
-    private var canceling = false
 
     init {
         Exchange.LOGGER.info("Created trade session between ${firstPlayer.name.string} and ${secondPlayer.name.string}")
     }
 
     fun openMenus() {
+        if (state != State.PENDING) {
+            return
+        }
+
+        state = State.ACTIVE
         openTradeMenu(firstPlayer, secondPlayer)
         openTradeMenu(secondPlayer, firstPlayer)
         syncMenus()
     }
 
     fun offerContainerFor(player: ServerPlayer): SimpleContainer {
-        return if (player.uuid == firstPlayer.uuid) firstOfferContainer else secondOfferContainer
+        return getParticipantData(player)?.offerContainer
+            ?: throw IllegalArgumentException("Player ${player.uuid} is not part of this trade session")
     }
 
     fun partnerOfferContainerFor(player: ServerPlayer): SimpleContainer {
-        return if (player.uuid == firstPlayer.uuid) secondOfferContainer else firstOfferContainer
+        return getPartnerData(player)?.offerContainer
+            ?: throw IllegalArgumentException("Player ${player.uuid} is not part of this trade session")
     }
 
     fun attachMenu(player: ServerPlayer, menu: TradeMenu) {
+        if (!isParticipant(player)) {
+            return
+        }
+
         openMenus[player.uuid] = menu
         syncMenu(menu, player)
     }
@@ -51,8 +61,12 @@ class TradeSession(
         return player.uuid == firstPlayer.uuid || player.uuid == secondPlayer.uuid
     }
 
-    fun onOffersChanged() {
-        if (finished || canceling) {
+    fun isActiveFor(player: Player): Boolean {
+        return state == State.ACTIVE && isParticipant(player)
+    }
+
+    fun onOfferChanged(player: ServerPlayer) {
+        if (state != State.ACTIVE || !isParticipant(player)) {
             return
         }
 
@@ -65,71 +79,75 @@ class TradeSession(
     }
 
     fun toggleAccepted(player: ServerPlayer) {
-        if (finished || canceling) {
+        if (state != State.ACTIVE) {
             return
         }
 
-        when (player.uuid) {
-            firstPlayer.uuid -> firstAccepted = !firstAccepted
-            secondPlayer.uuid -> secondAccepted = !secondAccepted
-            else -> return
+        when (getParticipantRole(player)) {
+            ParticipantRole.FIRST -> firstAccepted = !firstAccepted
+            ParticipantRole.SECOND -> secondAccepted = !secondAccepted
+            null -> return
         }
 
         syncMenus()
 
         if (firstAccepted && secondAccepted) {
-            completeTrade()
+            finishTrade()
         }
     }
 
     fun onMenuClosed(player: ServerPlayer) {
         openMenus.remove(player.uuid)
 
-        if (finished || canceling) {
+        if (state != State.ACTIVE || !isParticipant(player)) {
             return
         }
 
-        cancelTrade(player)
+        cancel(player, EndReason.MENU_CLOSED)
     }
 
-    fun cancelTrade(sourcePlayer: ServerPlayer?) {
-        if (finished || canceling) {
+    fun cancel(sourcePlayer: ServerPlayer?, reason: EndReason = EndReason.CANCELLED) {
+        if (state != State.ACTIVE) {
             return
         }
 
-        canceling = true
+        state = State.CANCELING
         returnOffersToOriginalPlayers()
-        TradeManager.removeSession(this)
-
-        closePlayerMenu(firstPlayer)
-        closePlayerMenu(secondPlayer)
+        finishSession()
 
         Exchange.LOGGER.info("Cancelled trade session between ${firstPlayer.name.string} and ${secondPlayer.name.string}")
 
-        sourcePlayer?.sendSystemMessage(Exchange.translatable("container", "trade.cancelled"))
+        when (reason) {
+            EndReason.CANCELLED -> {
+                val partner = sourcePlayer?.let(::getPartner)
+                sourcePlayer?.sendSystemMessage(Exchange.translatable("container", "trade.cancelled"))
+                partner?.sendSystemMessage(Exchange.translatable("container", "trade.cancelled_by_partner"))
+            }
+
+            EndReason.MENU_CLOSED -> {
+                val partner = sourcePlayer?.let(::getPartner)
+                sourcePlayer?.sendSystemMessage(Exchange.translatable("container", "trade.cancelled"))
+                partner?.sendSystemMessage(Exchange.translatable("container", "trade.partner_left"))
+            }
+
+            EndReason.COMPLETED -> Unit
+        }
     }
 
     fun getPartner(currentPlayer: ServerPlayer): ServerPlayer? {
-        return when (currentPlayer.uuid) {
-            firstPlayer.uuid -> secondPlayer
-            secondPlayer.uuid -> firstPlayer
-            else -> null
-        }
+        return getPartnerData(currentPlayer)?.player
     }
 
-    private fun completeTrade() {
-        if (finished || canceling) {
+    private fun finishTrade() {
+        if (state != State.ACTIVE) {
             return
         }
 
-        finished = true
+        state = State.COMPLETING
         transferOffersToPlayer(firstOfferContainer, secondPlayer)
         transferOffersToPlayer(secondOfferContainer, firstPlayer)
         clearOffers()
-        TradeManager.removeSession(this)
-
-        closePlayerMenu(firstPlayer)
-        closePlayerMenu(secondPlayer)
+        finishSession(State.COMPLETED)
 
         Exchange.LOGGER.info("Trade completed between ${firstPlayer.name.string} and ${secondPlayer.name.string}")
 
@@ -166,6 +184,13 @@ class TradeSession(
         }
     }
 
+    private fun finishSession(finalState: State = State.CANCELLED) {
+        TradeManager.removeSession(this)
+        closePlayerMenu(firstPlayer)
+        closePlayerMenu(secondPlayer)
+        state = finalState
+    }
+
     private fun closePlayerMenu(player: ServerPlayer) {
         val menu = openMenus[player.uuid] ?: return
         if (player.containerMenu === menu) {
@@ -198,5 +223,63 @@ class TradeSession(
         } else {
             menu.setAcceptStatus(secondAccepted, firstAccepted)
         }
+    }
+
+    private fun getParticipantRole(player: ServerPlayer): ParticipantRole? {
+        return when (player.uuid) {
+            firstPlayer.uuid -> ParticipantRole.FIRST
+            secondPlayer.uuid -> ParticipantRole.SECOND
+            else -> null
+        }
+    }
+
+    private fun getParticipantData(player: ServerPlayer): ParticipantData? {
+        return when (getParticipantRole(player)) {
+            ParticipantRole.FIRST -> ParticipantData(firstPlayer, firstOfferContainer)
+            ParticipantRole.SECOND -> ParticipantData(secondPlayer, secondOfferContainer)
+            null -> null
+        }
+    }
+
+    private fun getPartnerData(player: ServerPlayer): ParticipantData? {
+        return when (getParticipantRole(player)) {
+            ParticipantRole.FIRST -> ParticipantData(secondPlayer, secondOfferContainer)
+            ParticipantRole.SECOND -> ParticipantData(firstPlayer, firstOfferContainer)
+            null -> null
+        }
+    }
+
+    private class OfferContainer(
+        private val ownerId: UUID,
+        private val onChanged: () -> Unit
+    ) : SimpleContainer(TradeMenu.OFFER_SLOT_COUNT) {
+        override fun setChanged() {
+            super.setChanged()
+            onChanged()
+        }
+
+        override fun stillValid(player: Player): Boolean = player.uuid == ownerId
+    }
+
+    private data class ParticipantData(val player: ServerPlayer, val offerContainer: SimpleContainer)
+
+    enum class EndReason {
+        CANCELLED,
+        MENU_CLOSED,
+        COMPLETED
+    }
+
+    private enum class State {
+        PENDING,
+        ACTIVE,
+        CANCELING,
+        COMPLETING,
+        CANCELLED,
+        COMPLETED
+    }
+
+    private enum class ParticipantRole {
+        FIRST,
+        SECOND
     }
 }
