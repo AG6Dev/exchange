@@ -2,8 +2,9 @@ package dev.ag6.exchange.block
 
 import com.mojang.serialization.MapCodec
 import dev.ag6.exchange.blockentity.ExchangeTerminalBlockEntity
-import dev.ag6.exchange.world.TerminalPositionsSavedData
+import dev.ag6.exchange.init.NetworkInit
 import net.minecraft.core.BlockPos
+import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
@@ -29,12 +30,10 @@ class ExchangeTerminalBlock(properties: Properties) : BaseEntityBlock(properties
 
         val blockEntity = level.getBlockEntity(blockPos)
         if (blockEntity is ExchangeTerminalBlockEntity) {
-
-            if(blockEntity.owner == null) {
-                blockEntity.owner = player.uuid
-            }
-
             player.openMenu(blockEntity)
+            if (player is ServerPlayer) {
+                NetworkInit.syncTerminalOffersToPlayer(player)
+            }
         }
 
         return super.useItemOn(itemStack, blockState, level, blockPos, player, interactionHand, blockHitResult)
@@ -46,19 +45,6 @@ class ExchangeTerminalBlock(properties: Properties) : BaseEntityBlock(properties
         blockPos: BlockPos, blockState: BlockState
     ): BlockEntity {
         return ExchangeTerminalBlockEntity(blockPos, blockState)
-    }
-
-    override fun onPlace(
-        blockState: BlockState,
-        level: Level,
-        blockPos: BlockPos,
-        oldBlockState: BlockState,
-        movedByPiston: Boolean
-    ) {
-        super.onPlace(blockState, level, blockPos, oldBlockState, movedByPiston)
-        if (oldBlockState.`is`(this)) return
-
-        TerminalPositionsSavedData.getSavedData(level)?.addTerminal(blockPos)
     }
 
     companion object {

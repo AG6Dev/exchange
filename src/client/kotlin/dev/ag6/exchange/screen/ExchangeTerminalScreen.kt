@@ -1,6 +1,7 @@
 package dev.ag6.exchange.screen
 
 import dev.ag6.exchange.Exchange
+import dev.ag6.exchange.blockentity.ExchangeOffer
 import dev.ag6.exchange.menu.ExchangeTerminalMenu
 import dev.ag6.exchange.network.AddOfferPayload
 import dev.ag6.exchange.screen.widget.OfferSelectionList
@@ -15,7 +16,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.Items
 
-//todo: needs to get all trades not just the ones at that terminal
 class ExchangeTerminalScreen(menu: ExchangeTerminalMenu, private val playerInventory: Inventory, title: Component) :
     AbstractContainerScreen<ExchangeTerminalMenu>(menu, playerInventory, title) {
 
@@ -28,14 +28,18 @@ class ExchangeTerminalScreen(menu: ExchangeTerminalMenu, private val playerInven
         super.init()
 
         searchBox = createSearchBox()
-        selectionList = OfferSelectionList( minecraft, leftPos + 108, topPos + 48, 183, 140, 1)
-
-        for(offer in menu.offers) {
-            selectionList.addEntry(OfferSelectionList.ListEntry(offer))
-        }
+        selectionList = OfferSelectionList(
+            minecraft,
+            leftPos + 108,
+            topPos + 48,
+            183,
+            140,
+            OfferSelectionList.ENTRY_HEIGHT
+        )
+        refreshOffers()
 
         val btn = Button.builder(Component.literal("Add trade")) { _ ->
-            ClientPlayNetworking.send(AddOfferPayload(listOf(Items.BEDROCK.defaultInstance), listOf(Items.BEDROCK.defaultInstance)))
+            ClientPlayNetworking.send(AddOfferPayload(listOf(Items.BEDROCK.defaultInstance), listOf(Items.BEEF.defaultInstance)))
         }.size(32, 16).pos(leftPos + 7, topPos + 50).build()
 
         addRenderableWidget(searchBox)
@@ -65,6 +69,19 @@ class ExchangeTerminalScreen(menu: ExchangeTerminalMenu, private val playerInven
 
     private fun onSearchChanged(newValue: String) {
 
+    }
+
+    fun applyOfferSnapshot(offers: List<ExchangeOffer>) {
+        menu.replaceOffers(offers)
+        refreshOffers()
+    }
+
+    fun refreshOffers() {
+        if (!::selectionList.isInitialized) {
+            return
+        }
+
+        selectionList.setOffers(menu.offers)
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {

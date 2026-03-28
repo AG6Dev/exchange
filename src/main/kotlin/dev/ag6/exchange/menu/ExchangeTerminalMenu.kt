@@ -1,6 +1,6 @@
 package dev.ag6.exchange.menu
 
-import dev.ag6.exchange.blockentity.ExchangeTerminalBlockEntity
+import dev.ag6.exchange.blockentity.ExchangeOffer
 import dev.ag6.exchange.init.MenuTypeInit
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.player.Inventory
@@ -10,13 +10,15 @@ import net.minecraft.world.item.ItemStack
 
 class ExchangeTerminalMenu(syncId: Int, playerInventory: Inventory, val pos: BlockPos) :
     AbstractContainerMenu(MenuTypeInit.EXCHANGE_TERMINAL, syncId) {
-    val offers = playerInventory.player.level().getBlockEntity(pos)?.let { be ->
-        if (be is ExchangeTerminalBlockEntity) {
-            be.offers
-        } else {
-            null
-        }
-    } ?: emptyList()
+    private val trackedOffers: MutableList<ExchangeOffer> = mutableListOf()
+
+    val offers: List<ExchangeOffer>
+        get() = trackedOffers.toList()
+
+    fun replaceOffers(newOffers: List<ExchangeOffer>) {
+        trackedOffers.clear()
+        trackedOffers.addAll(newOffers)
+    }
 
 
     override fun quickMoveStack(
