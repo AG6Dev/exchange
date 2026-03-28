@@ -23,7 +23,7 @@ class ExchangeTerminalScreen(menu: ExchangeTerminalMenu, private val playerInven
     lateinit var selectionList: OfferSelectionList
 
     override fun init() {
-        imageWidth = 298
+        imageWidth = 313
         imageHeight = 202
         super.init()
 
@@ -32,7 +32,7 @@ class ExchangeTerminalScreen(menu: ExchangeTerminalMenu, private val playerInven
             minecraft,
             leftPos + 108,
             topPos + 48,
-            183,
+            198,
             140,
             OfferSelectionList.ENTRY_HEIGHT
         )
@@ -91,6 +91,13 @@ class ExchangeTerminalScreen(menu: ExchangeTerminalMenu, private val playerInven
             }
         }
         return super.keyPressed(event)
+    }
+
+    override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
+        if(::selectionList.isInitialized && selectionList.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+            return true
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
     }
 
     companion object {

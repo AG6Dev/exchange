@@ -28,10 +28,15 @@ class OfferSelectionList(
         }
     }
 
+    override fun scrollBarX(): Int {
+        return x + width - 6
+    }
+
     class ListEntry(private val offer: ExchangeOffer) : Entry<ListEntry>() {
         override fun renderContent(
             guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int, isHovering: Boolean, partialTick: Float
         ) {
+            val textRenderer = Minecraft.getInstance().font
             val contentY = y + ENTRY_GAP / 2
             val cardX = x + CARD_X_OFFSET
             val arrowCenterX = cardX + ARROW_CENTER_X
@@ -41,7 +46,7 @@ class OfferSelectionList(
                 ExchangeTerminalScreen.TEXTURE,
                 cardX,
                 contentY,
-                298f,
+                314f,
                 0f,
                 CARD_WIDTH,
                 CARD_HEIGHT,
@@ -52,9 +57,13 @@ class OfferSelectionList(
             renderItems(guiGraphics, mouseX, mouseY, cardX + ITEM_ROW_X, contentY + TOP_ROW_Y, offer.offeredItems)
             renderItems(guiGraphics, mouseX, mouseY, cardX + ITEM_ROW_X, contentY + BOTTOM_ROW_Y, offer.receivingItems)
 
+            val sellerUsername = Minecraft.getInstance().services().nameToIdCache.get(offer.seller)
+            guiGraphics.drawString(textRenderer, sellerUsername.get().name, x + 122, y + 11, -12566464, false)
+            guiGraphics.drawString(textRenderer, offer.terminalLocation.toShortString(), x + 122, y + 22, -12566464, false)
+
             if (isHoveringArrow(mouseX, mouseY, arrowCenterX, contentY + TOP_ARROW_Y)) {
                 guiGraphics.renderTooltip(
-                    Minecraft.getInstance().font,
+                    textRenderer,
                     listOf(ClientTooltipComponent.create(Component.literal(SELLING_LABEL).visualOrderText)),
                     mouseX,
                     mouseY,
@@ -63,7 +72,7 @@ class OfferSelectionList(
                 )
             } else if (isHoveringArrow(mouseX, mouseY, arrowCenterX, contentY + BOTTOM_ARROW_Y)) {
                 guiGraphics.renderTooltip(
-                    Minecraft.getInstance().font,
+                    textRenderer,
                     listOf(ClientTooltipComponent.create(Component.literal(FOR_LABEL).visualOrderText)),
                     mouseX,
                     mouseY,
