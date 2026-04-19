@@ -39,7 +39,12 @@ class ExchangeTerminalScreen(menu: ExchangeTerminalMenu, private val playerInven
         refreshOffers()
 
         val btn = Button.builder(Component.literal("Add trade")) { _ ->
-            ClientPlayNetworking.send(AddOfferPayload(listOf(Items.BEDROCK.defaultInstance), listOf(Items.BEEF.defaultInstance)))
+            ClientPlayNetworking.send(
+                AddOfferPayload(
+                    listOf(Items.BEDROCK.defaultInstance),
+                    listOf(Items.BEEF.defaultInstance)
+                )
+            )
         }.size(32, 16).pos(leftPos + 7, topPos + 50).build()
 
         addRenderableWidget(searchBox)
@@ -68,7 +73,33 @@ class ExchangeTerminalScreen(menu: ExchangeTerminalMenu, private val playerInven
     }
 
     private fun onSearchChanged(newValue: String) {
+        selectionList.setOffers(filterOffers(newValue))
+    }
 
+    private fun filterOffers(query: String): List<ExchangeOffer> {
+        if (query.isBlank()) return menu.offers
+
+        val lower = query.lowercase()
+        val isRegistryQuery = ':' in lower
+
+        return menu.offers.filter { offer ->
+            val allStacks = offer.offeredItems + offer.receivingItems
+
+            val itemMatches = if (isRegistryQuery) {
+                allStacks.any { stack ->
+                    stack.item.builtInRegistryHolder().key().identifier().toString().lowercase().contains(lower)
+                }
+            } else {
+                allStacks.any { stack ->
+                    stack.hoverName.string.lowercase().contains(lower)
+                }
+            }
+
+            val playerName = minecraft.services().nameToIdCache.get(offer.seller).get()?.name ?: ""
+            val playerMatches = playerName.lowercase().contains(lower)
+
+            itemMatches || playerMatches
+        }
     }
 
     fun applyOfferSnapshot(offers: List<ExchangeOffer>) {
@@ -81,7 +112,7 @@ class ExchangeTerminalScreen(menu: ExchangeTerminalMenu, private val playerInven
             return
         }
 
-        selectionList.setOffers(menu.offers)
+        selectionList.setOffers(filterOffers(searchBox.value))
     }
 
     override fun keyPressed(event: KeyEvent): Boolean {
@@ -94,7 +125,7 @@ class ExchangeTerminalScreen(menu: ExchangeTerminalMenu, private val playerInven
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-        if(::selectionList.isInitialized && selectionList.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+        if (::selectionList.isInitialized && selectionList.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
             return true
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
