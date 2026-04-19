@@ -1,7 +1,5 @@
 package dev.ag6.exchange.block
 
-import com.mojang.serialization.MapCodec
-import dev.ag6.exchange.blockentity.ExchangeTerminalBlockEntity
 import dev.ag6.exchange.init.NetworkInit
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerPlayer
@@ -10,13 +8,12 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
-import net.minecraft.world.level.block.BaseEntityBlock
-import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 
 //TODO: a fun loading animation when opening the block menu, can be toggleable in config
-class ExchangeTerminalBlock(properties: Properties) : BaseEntityBlock(properties) {
+class ExchangeTerminalBlock(properties: Properties) : Block(properties) {
     override fun useItemOn(
         itemStack: ItemStack,
         blockState: BlockState,
@@ -26,28 +23,9 @@ class ExchangeTerminalBlock(properties: Properties) : BaseEntityBlock(properties
         interactionHand: InteractionHand,
         blockHitResult: BlockHitResult
     ): InteractionResult {
-        if (level.isClientSide) return InteractionResult.SUCCESS
-
-        val blockEntity = level.getBlockEntity(blockPos)
-        if (blockEntity is ExchangeTerminalBlockEntity) {
-            player.openMenu(blockEntity)
-            if (player is ServerPlayer) {
-                NetworkInit.syncTerminalOffersToPlayer(player)
-            }
+        if (!level.isClientSide && player is ServerPlayer) {
+            NetworkInit.syncTerminalOffersToPlayer(player)
         }
-
         return super.useItemOn(itemStack, blockState, level, blockPos, player, interactionHand, blockHitResult)
-    }
-
-    override fun codec(): MapCodec<out BaseEntityBlock> = CODEC
-
-    override fun newBlockEntity(
-        blockPos: BlockPos, blockState: BlockState
-    ): BlockEntity {
-        return ExchangeTerminalBlockEntity(blockPos, blockState)
-    }
-
-    companion object {
-        private val CODEC: MapCodec<ExchangeTerminalBlock> = simpleCodec(::ExchangeTerminalBlock)
     }
 }

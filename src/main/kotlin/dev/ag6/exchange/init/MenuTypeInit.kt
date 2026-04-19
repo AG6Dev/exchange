@@ -1,10 +1,8 @@
 package dev.ag6.exchange.init
 
 import dev.ag6.exchange.Exchange
-import dev.ag6.exchange.menu.ExchangeTerminalMenu
 import dev.ag6.exchange.menu.TradeMenu
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType
-import net.minecraft.core.BlockPos
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf
@@ -15,7 +13,6 @@ import net.minecraft.world.inventory.MenuType
 
 object MenuTypeInit {
     val TRADE: MenuType<TradeMenu> = register("trade", ::TradeMenu)
-    val EXCHANGE_TERMINAL: MenuType<ExchangeTerminalMenu> = register("exchange_terminal", ::ExchangeTerminalMenu, BlockPos.STREAM_CODEC)
 
     private fun <T : AbstractContainerMenu, D : Any> register(
         id: String,

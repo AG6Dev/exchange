@@ -1,8 +1,6 @@
 package dev.ag6.exchange.init
 
 import dev.ag6.exchange.Exchange
-import dev.ag6.exchange.menu.ExchangeTerminalMenu
-import dev.ag6.exchange.network.AddOfferPayload
 import dev.ag6.exchange.network.TerminalOffersPayload
 import dev.ag6.exchange.network.TradeRequestPayload
 import dev.ag6.exchange.trade.TradeManager
@@ -14,7 +12,6 @@ import net.minecraft.server.level.ServerPlayer
 object NetworkInit {
     private fun registerC2SPayloads() {
         PayloadTypeRegistry.playC2S().register(TradeRequestPayload.TYPE, TradeRequestPayload.STREAM_CODEC)
-        PayloadTypeRegistry.playC2S().register(AddOfferPayload.TYPE, AddOfferPayload.STREAM_CODEC)
     }
 
     private fun registerS2CPayloads() {
@@ -52,29 +49,11 @@ object NetworkInit {
             }
         }
 
-        ServerPlayNetworking.registerGlobalReceiver(AddOfferPayload.TYPE) { payload, context ->
-            val requester = context.player()
-            val server = context.server()
-
-            server.execute {
-                val menu = requester.containerMenu as? ExchangeTerminalMenu ?: return@execute
-                if (payload.itemsGiving.isEmpty() || payload.itemsWanted.isEmpty()) {
-                    Exchange.LOGGER.error("Could not add offer because the offered or receiving items are empty")
-                    return@execute
-                }
-
-                val savedData = ExchangeOffersSavedData.getSavedData(requester.level()) ?: return@execute
-                savedData.addOffer(requester.uuid, menu.pos, payload.itemsGiving, payload.itemsWanted)
-                syncTerminalOffersToOpenMenus(server.playerList.players)
-            }
-        }
     }
 
-    fun syncTerminalOffersToPlayer(player: ServerPlayer, menu: ExchangeTerminalMenu? = player.containerMenu as? ExchangeTerminalMenu) {
-        menu ?: return
+    fun syncTerminalOffersToPlayer(player: ServerPlayer) {
         val offers = ExchangeOffersSavedData.getSavedData(player.level())?.getAllOffers().orEmpty()
-        menu.replaceOffers(offers)
-        ServerPlayNetworking.send(player, TerminalOffersPayload(menu.pos, offers))
+        ServerPlayNetworking.send(player, TerminalOffersPayload(offers))
     }
 
     fun syncTerminalOffersToOpenMenus(players: Iterable<ServerPlayer>) {
