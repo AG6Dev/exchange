@@ -30,6 +30,8 @@ loom {
             sourceSet(sourceSets.getByName("client"))
         }
     }
+
+    accessWidenerPath = file("src/main/resources/exchange.accesswidener")
 }
 
 dependencies {

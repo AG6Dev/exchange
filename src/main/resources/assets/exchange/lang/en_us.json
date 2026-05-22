@@ -8,5 +8,10 @@
   "message.exchange.trade.distance": "Move closer to the player you want to trade with.",
 
   "container.exchange.exchange_terminal": "Exchange Terminal",
-  "container.exchange.exchange_terminal.search": "Search for trades"
+  "container.exchange.exchange_terminal.search": "Search for trades",
+  "container.exchange.shop_front": "Shop Front",
+  "container.exchange.shop_front_owner.create_trade": "Create Trade",
+  "container.exchange.create_offer": "Create Offer",
+  "container.exchange.create_offer.cancel": "Cancel",
+  "container.exchange.create_offer.confirm": "Confirm"
 }

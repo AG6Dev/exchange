@@ -13,6 +13,7 @@
 	},
 	"license": "MIT License",
 	"icon": "assets/exchange/icon.png",
+  "accessWidener": "exchange.accesswidener",
 	"environment": "*",
 	"entrypoints": {
 		"main": [

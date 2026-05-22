@@ -1,8 +1,8 @@
 package dev.ag6.exchange.screen.widget
 
-import dev.ag6.exchange.blockentity.ExchangeOffer
-import dev.ag6.exchange.screen.ExchangeTerminalScreen
-import dev.ag6.exchange.screen.util.renderFakeSlot
+import dev.ag6.exchange.Exchange
+import dev.ag6.exchange.offer.ExchangeOffer
+import dev.ag6.exchange.screen.renderFakeSlot
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.ContainerObjectSelectionList
@@ -15,8 +15,8 @@ import net.minecraft.network.chat.Component
 import net.minecraft.world.item.ItemStack
 
 class OfferSelectionList(
-    mc: Minecraft, x: Int, y: Int, width: Int, height: Int, itemHeight: Int
-) : ContainerObjectSelectionList<OfferSelectionList.ListEntry>(mc, width, height, y, itemHeight) {
+    mc: Minecraft, x: Int, y: Int, width: Int, height: Int
+) : ContainerObjectSelectionList<OfferSelectionList.ListEntry>(mc, width, height, y, ENTRY_HEIGHT) {
     init {
         this.setPosition(x, y)
     }
@@ -43,15 +43,15 @@ class OfferSelectionList(
 
             guiGraphics.blit(
                 RenderPipelines.GUI_TEXTURED,
-                ExchangeTerminalScreen.TEXTURE,
+                TEXTURE,
                 cardX,
                 contentY,
-                314f,
+                0f,
                 0f,
                 CARD_WIDTH,
                 CARD_HEIGHT,
-                512,
-                512
+                256,
+                256
             )
 
             renderItems(guiGraphics, mouseX, mouseY, cardX + ITEM_ROW_X, contentY + TOP_ROW_Y, offer.offeredItems)
@@ -59,7 +59,7 @@ class OfferSelectionList(
 
             val sellerUsername = Minecraft.getInstance().services().nameToIdCache.get(offer.seller)
             guiGraphics.drawString(textRenderer, sellerUsername.get().name, x + 122, y + 11, -12566464, false)
-            guiGraphics.drawString(textRenderer, offer.terminalLocation.toShortString(), x + 122, y + 22, -12566464, false)
+            guiGraphics.drawString(textRenderer, offer.location.toShortString(), x + 122, y + 22, -12566464, false)
 
             if (isHoveringArrow(mouseX, mouseY, arrowCenterX, contentY + TOP_ARROW_Y)) {
                 guiGraphics.renderTooltip(
@@ -135,5 +135,7 @@ class OfferSelectionList(
         private const val ARROW_HITBOX_HEIGHT = 15
         private const val SELLING_LABEL = "SELLING"
         private const val FOR_LABEL = "FOR"
+
+        private val TEXTURE = Exchange.id("textures/gui/widget/offer_list_card.png")
     }
 }

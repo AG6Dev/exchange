@@ -2,6 +2,9 @@ package dev.ag6.exchange.init
 
 import dev.ag6.exchange.Exchange
 import dev.ag6.exchange.menu.TradeMenu
+import dev.ag6.exchange.menu.shopfront.owner.CreateOfferMenu
+import dev.ag6.exchange.menu.shopfront.owner.ShopFrontOwnerMenu
+import dev.ag6.exchange.network.BlockPosPayload
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType
 import net.minecraft.core.Registry
 import net.minecraft.core.registries.BuiltInRegistries
@@ -13,6 +16,17 @@ import net.minecraft.world.inventory.MenuType
 
 object MenuTypeInit {
     val TRADE: MenuType<TradeMenu> = register("trade", ::TradeMenu)
+
+    val SHOP_FRONT_OWNER: MenuType<ShopFrontOwnerMenu> = register(
+        "shop_front_owner", ::ShopFrontOwnerMenu,
+        BlockPosPayload.STREAM_CODEC
+    )
+
+    val CREATE_TRADE: MenuType<CreateOfferMenu> = register(
+        "create_offer",
+        ::CreateOfferMenu,
+        BlockPosPayload.STREAM_CODEC
+    )
 
     private fun <T : AbstractContainerMenu, D : Any> register(
         id: String,

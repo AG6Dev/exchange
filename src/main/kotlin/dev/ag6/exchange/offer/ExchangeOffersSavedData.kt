@@ -1,8 +1,7 @@
-package dev.ag6.exchange.world
+package dev.ag6.exchange.offer
 
 import com.mojang.serialization.Codec
 import com.mojang.serialization.codecs.RecordCodecBuilder
-import dev.ag6.exchange.blockentity.ExchangeOffer
 import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
@@ -11,7 +10,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.saveddata.SavedData
 import net.minecraft.world.level.saveddata.SavedDataType
-import java.util.UUID
+import java.util.*
 
 class ExchangeOffersSavedData : SavedData() {
     private val offers: MutableList<ExchangeOffer> = mutableListOf()
@@ -31,7 +30,7 @@ class ExchangeOffersSavedData : SavedData() {
     }
 
     fun removeOffersAt(terminalLocation: BlockPos) {
-        if (!offers.removeIf { it.terminalLocation == terminalLocation }) {
+        if (!offers.removeIf { it.location == terminalLocation }) {
             return
         }
 
@@ -61,8 +60,8 @@ class ExchangeOffersSavedData : SavedData() {
             return level.dataStorage.computeIfAbsent(TYPE)
         }
 
-        fun getSavedData(level: Level): ExchangeOffersSavedData? {
-            if (level.isClientSide) {
+        fun getSavedData(level: Level?): ExchangeOffersSavedData? {
+            if (level == null || level.isClientSide) {
                 return null
             }
 

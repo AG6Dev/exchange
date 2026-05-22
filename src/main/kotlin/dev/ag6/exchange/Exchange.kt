@@ -4,7 +4,7 @@ import dev.ag6.exchange.init.BlockEntityInit
 import dev.ag6.exchange.init.BlockInit
 import dev.ag6.exchange.init.ItemInit
 import dev.ag6.exchange.init.MenuTypeInit
-import dev.ag6.exchange.init.NetworkInit
+import dev.ag6.exchange.network.CommonNetworking
 import net.fabricmc.api.ModInitializer
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
@@ -25,7 +25,7 @@ object Exchange : ModInitializer {
         BlockInit.init()
         BlockEntityInit.init()
         MenuTypeInit.init()
-        NetworkInit.init()
+        CommonNetworking.init()
 
         LOGGER.info("Exchange Mod initialized.")
     }
