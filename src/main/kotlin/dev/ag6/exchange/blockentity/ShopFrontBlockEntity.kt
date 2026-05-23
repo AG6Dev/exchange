@@ -3,6 +3,7 @@ package dev.ag6.exchange.blockentity
 import dev.ag6.exchange.init.BlockEntityInit
 import dev.ag6.exchange.menu.shopfront.owner.ShopFrontOwnerMenu
 import dev.ag6.exchange.network.BlockPosPayload
+import dev.ag6.exchange.network.CommonNetworking
 import dev.ag6.exchange.offer.ExchangeOffer
 import dev.ag6.exchange.offer.ExchangeOffersSavedData
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
@@ -42,6 +43,10 @@ class ShopFrontBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Block
     override fun createMenu(
         i: Int, inventory: Inventory, player: Player
     ): AbstractContainerMenu {
+        if (player is ServerPlayer) {
+            CommonNetworking.sendSyncExchangeOffersPayload(player, getOffers())
+        }
+
         if (player.uuid == owner) {
             return ShopFrontOwnerMenu(i, inventory, this)
         }

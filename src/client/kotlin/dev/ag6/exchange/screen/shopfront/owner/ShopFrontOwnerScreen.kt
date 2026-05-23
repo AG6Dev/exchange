@@ -18,15 +18,15 @@ class ShopFrontOwnerScreen(menu: ShopFrontOwnerMenu, inventory: Inventory, title
 
     override fun init() {
         this.imageWidth = IMAGE_WIDTH
-        this.imageWidth = IMAGE_HEIGHT
+        this.imageHeight = IMAGE_HEIGHT
         super.init()
 
         offerList = OfferSelectionList(minecraft, leftPos + 108, topPos + 48, 198, 140)
-        offerList.setOffers(menu.blockEntity.getOffers())
-        addRenderableWidget(offerList)
+        refreshOfferList()
         addRenderableWidget(Button.builder(Exchange.translatable("container", "shop_front_owner.create_trade")) {
             ExchangeClientNetworking.sendOpenCreateOfferMenuPayload(menu.blockEntity.blockPos)
         }.build())
+        addRenderableWidget(offerList)
     }
 
     override fun renderBg(
@@ -35,6 +35,12 @@ class ShopFrontOwnerScreen(menu: ShopFrontOwnerMenu, inventory: Inventory, title
         guiGraphics.blit(
             RenderPipelines.GUI_TEXTURED, TEXTURE, leftPos, topPos, 0f, 0f, IMAGE_WIDTH, IMAGE_HEIGHT, 512, 512
         )
+    }
+
+    fun refreshOfferList() {
+        if (::offerList.isInitialized) {
+            offerList.setOffers(ExchangeClientNetworking.offersCache.filter { it.location == menu.blockEntity.blockPos })
+        }
     }
 
     companion object {

@@ -3,6 +3,7 @@ package dev.ag6.exchange.network
 import dev.ag6.exchange.Exchange
 import dev.ag6.exchange.blockentity.ShopFrontBlockEntity
 import dev.ag6.exchange.menu.shopfront.owner.CreateOfferMenu
+import dev.ag6.exchange.offer.ExchangeOffer
 import dev.ag6.exchange.offer.ExchangeOffersSavedData
 import dev.ag6.exchange.trade.TradeManager
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
@@ -21,6 +22,11 @@ object CommonNetworking {
         registerServerReceivers()
     }
 
+    fun sendSyncExchangeOffersPayload(player: ServerPlayer, offers: List<ExchangeOffer>) = ServerPlayNetworking.send(
+        player,
+        SyncExchangeOffersPayload(offers)
+    )
+
     private fun registerC2SPayloads() {
         PayloadTypeRegistry.playC2S().register(TradeRequestPayload.TYPE, TradeRequestPayload.STREAM_CODEC)
         PayloadTypeRegistry.playC2S().register(AddOfferPayload.TYPE, AddOfferPayload.STREAM_CODEC)
@@ -28,7 +34,7 @@ object CommonNetworking {
     }
 
     private fun registerS2CPayloads() {
-
+        PayloadTypeRegistry.playS2C().register(SyncExchangeOffersPayload.TYPE, SyncExchangeOffersPayload.STREAM_CODEC)
     }
 
     private fun registerServerReceivers() {
@@ -70,8 +76,9 @@ object CommonNetworking {
     private fun addOfferPayloadReceiver() =
         ServerPlayNetworking.registerGlobalReceiver(AddOfferPayload.TYPE) { payload, context ->
             val player = context.player()
+            val level = player.level()
 
-            val blockEntity = player.level().getBlockEntity(payload.shopfrontPos)
+            val blockEntity = level.getBlockEntity(payload.shopfrontPos)
             if (blockEntity !is ShopFrontBlockEntity) return@registerGlobalReceiver
             if (!player.isWithinBlockInteractionRange(payload.shopfrontPos, 4.0)) return@registerGlobalReceiver
 
@@ -80,24 +87,25 @@ object CommonNetworking {
             //maybe make this configurable
             if (giving.isEmpty() || wanting.isEmpty()) return@registerGlobalReceiver
 
-            ExchangeOffersSavedData.getSavedData(context.server())
-                .addOffer(player.uuid, payload.shopfrontPos, giving, wanting)
+            val saveData = ExchangeOffersSavedData.getSavedData(level)
 
+            saveData?.addOffer(player.uuid, payload.shopfrontPos, giving, wanting)
+
+            sendSyncExchangeOffersPayload(player, saveData?.getAllOffers() ?: emptyList())
         }
 
     private fun openCreateMenuPayloadReceiver() =
         ServerPlayNetworking.registerGlobalReceiver(OpenCreateTradeMenuPayload.TYPE) { payload, context ->
             val player = context.player()
             val level = player.level()
-            val shopfrontPos = payload.shopfrontPos
-            val blockEntity = level.getBlockEntity(shopfrontPos)
+            val blockEntity = level.getBlockEntity(payload.shopfrontPos)
 
             if (blockEntity is ShopFrontBlockEntity) {
                 if (!blockEntity.isOwner(player)) return@registerGlobalReceiver
 
                 val provider = object : ExtendedScreenHandlerFactory<BlockPosPayload> {
                     override fun getScreenOpeningData(player: ServerPlayer): BlockPosPayload {
-                        return BlockPosPayload(shopfrontPos)
+                        return BlockPosPayload(payload.shopfrontPos)
                     }
 
                     override fun getDisplayName(): Component {

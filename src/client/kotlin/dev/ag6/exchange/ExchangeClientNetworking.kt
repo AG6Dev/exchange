@@ -2,13 +2,18 @@ package dev.ag6.exchange
 
 import dev.ag6.exchange.network.AddOfferPayload
 import dev.ag6.exchange.network.OpenCreateTradeMenuPayload
+import dev.ag6.exchange.network.SyncExchangeOffersPayload
 import dev.ag6.exchange.network.TradeRequestPayload
+import dev.ag6.exchange.offer.ExchangeOffer
+import dev.ag6.exchange.screen.shopfront.owner.ShopFrontOwnerScreen
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.ItemStack
 import java.util.*
 
 object ExchangeClientNetworking {
+    val offersCache: MutableList<ExchangeOffer> = mutableListOf()
+
     fun init() {
         registerClientReceivers()
     }
@@ -20,7 +25,20 @@ object ExchangeClientNetworking {
 
     fun sendTradeRequestPayload(targetUuid: UUID) = ClientPlayNetworking.send(TradeRequestPayload(targetUuid))
 
-    private fun registerClientReceivers() {
+    private fun syncExchangeOffersPayloadReceiver() = ClientPlayNetworking.registerGlobalReceiver(
+        SyncExchangeOffersPayload.TYPE
+    ) { payload, context ->
 
+        offersCache.clear()
+        offersCache.addAll(payload.offers)
+
+        val screen = context.client().screen
+        if (screen is ShopFrontOwnerScreen) {
+            screen.refreshOfferList()
+        }
+    }
+
+    private fun registerClientReceivers() {
+        syncExchangeOffersPayloadReceiver()
     }
 }

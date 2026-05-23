@@ -65,7 +65,7 @@ class ExchangeOffersSavedData : SavedData() {
                 return null
             }
 
-            return level.server?.let(::getSavedData)
+            return (level as ServerLevel).dataStorage.computeIfAbsent(TYPE)
         }
     }
 }
