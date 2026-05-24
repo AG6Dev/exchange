@@ -13,5 +13,7 @@
   "container.exchange.shop_front_owner.create_trade": "Create Trade",
   "container.exchange.create_offer": "Create Offer",
   "container.exchange.create_offer.cancel": "Cancel",
-  "container.exchange.create_offer.confirm": "Confirm"
+  "container.exchange.create_offer.confirm": "Confirm",
+  "container.exchange.widget.offer_arrow_selling": "Items Selling",
+  "container.exchange.widget.offer_arrow_wanted": "Items Wanted"
 }
