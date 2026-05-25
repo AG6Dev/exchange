@@ -9,7 +9,6 @@ import dev.ag6.exchange.offer.ExchangeOffersSavedData
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.core.BlockPos
 import net.minecraft.core.HolderLookup
-import net.minecraft.core.NonNullList
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.Packet
@@ -18,10 +17,12 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Containers
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.entity.ContainerUser
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.storage.ValueInput
@@ -31,7 +32,27 @@ import java.util.*
 class ShopFrontBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BlockEntityInit.SHOP_FRONT, pos, state),
     ExtendedScreenHandlerFactory<BlockPosPayload> {
 
-    val items: NonNullList<ItemStack> = NonNullList.withSize(32, ItemStack.EMPTY)
+    val inventory: SimpleContainer = object : SimpleContainer(27) {
+        override fun startOpen(user: ContainerUser) {
+            super.startOpen(user)
+            update()
+        }
+
+        override fun stopOpen(user: ContainerUser) {
+            super.stopOpen(user)
+            update()
+        }
+
+        override fun setChanged() {
+            super.setChanged()
+            update()
+        }
+    }
+    var isOpen: Boolean = false
+        set(value) {
+            field = value
+            this.update()
+        }
     var owner: UUID? = null
 
     override fun getScreenOpeningData(player: ServerPlayer): BlockPosPayload {
@@ -57,24 +78,27 @@ class ShopFrontBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Block
         super.preRemoveSideEffects(pos, state)
 
         ExchangeOffersSavedData.getSavedData(level)?.removeOffersAt(worldPosition)
-        level?.let { Containers.dropContents(it, worldPosition, items) }
+        level?.let { Containers.dropContents(it, worldPosition, inventory) }
     }
 
     override fun saveAdditional(output: ValueOutput) {
         super.saveAdditional(output)
-        ContainerHelper.saveAllItems(output, items)
+        ContainerHelper.saveAllItems(output, inventory.items)
 
         if (owner != null) {
             output.putString("Owner", owner.toString())
         }
+
+        output.putBoolean("IsOpen", isOpen)
     }
 
     override fun loadAdditional(input: ValueInput) {
         super.loadAdditional(input)
-        ContainerHelper.loadAllItems(input, items)
+        ContainerHelper.loadAllItems(input, inventory.items)
         input.getString("Owner").ifPresent {
             owner = UUID.fromString(it)
         }
+        isOpen = input.getBooleanOr("IsOpen", true)
     }
 
     override fun getUpdatePacket(): Packet<ClientGamePacketListener> {
@@ -92,6 +116,14 @@ class ShopFrontBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Block
     fun getOffers(): List<ExchangeOffer> {
         return ExchangeOffersSavedData.getSavedData(this.level)?.getAllOffers()
             ?.filter { it.location == this.worldPosition } ?: emptyList()
+    }
+
+    private fun update() {
+        setChanged()
+        level?.let {
+            if (!it.isClientSide)
+                it.sendBlockUpdated(worldPosition, blockState, blockState, Block.UPDATE_ALL)
+        }
     }
 
     companion object {

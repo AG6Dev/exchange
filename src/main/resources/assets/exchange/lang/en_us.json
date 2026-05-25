@@ -7,10 +7,15 @@
   "message.exchange.trade.occupied": "This player is currently trading with someone else.",
   "message.exchange.trade.distance": "Move closer to the player you want to trade with.",
 
-  "container.exchange.exchange_terminal": "Exchange Terminal",
-  "container.exchange.exchange_terminal.search": "Search for trades",
   "container.exchange.shop_front": "Shop Front",
+  "container.exchange.shop_front.search_prompt": "Search for items...",
   "container.exchange.shop_front_owner.create_trade": "Create Trade",
+  "container.exchange.shop_front_owner.view_inventory": "View Inventory",
+  "container.exchange.shop_front_owner.open_shop": "Open Shop",
+  "container.exchange.shop_front_owner.close_shop": "Close Shop",
+  "container.exchange.shop_front_owner.inventory": "Shop Inventory",
+
+
   "container.exchange.create_offer": "Create Offer",
   "container.exchange.create_offer.cancel": "Cancel",
   "container.exchange.create_offer.confirm": "Confirm",

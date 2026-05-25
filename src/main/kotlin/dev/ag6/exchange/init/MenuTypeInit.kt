@@ -3,6 +3,7 @@ package dev.ag6.exchange.init
 import dev.ag6.exchange.Exchange
 import dev.ag6.exchange.menu.TradeMenu
 import dev.ag6.exchange.menu.shopfront.owner.CreateOfferMenu
+import dev.ag6.exchange.menu.shopfront.owner.ShopFrontInventoryMenu
 import dev.ag6.exchange.menu.shopfront.owner.ShopFrontOwnerMenu
 import dev.ag6.exchange.network.BlockPosPayload
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType
@@ -25,6 +26,11 @@ object MenuTypeInit {
     val CREATE_TRADE: MenuType<CreateOfferMenu> = register(
         "create_offer",
         ::CreateOfferMenu,
+        BlockPosPayload.STREAM_CODEC
+    )
+
+    val SHOP_FRONT_INVENTORY: MenuType<ShopFrontInventoryMenu> = register(
+        "shop_front_inventory", ::ShopFrontInventoryMenu,
         BlockPosPayload.STREAM_CODEC
     )
 

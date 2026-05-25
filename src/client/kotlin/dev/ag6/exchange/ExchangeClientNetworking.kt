@@ -1,9 +1,6 @@
 package dev.ag6.exchange
 
-import dev.ag6.exchange.network.AddOfferPayload
-import dev.ag6.exchange.network.OpenCreateTradeMenuPayload
-import dev.ag6.exchange.network.SyncExchangeOffersPayload
-import dev.ag6.exchange.network.TradeRequestPayload
+import dev.ag6.exchange.network.*
 import dev.ag6.exchange.offer.ExchangeOffer
 import dev.ag6.exchange.screen.shopfront.owner.ShopFrontOwnerScreen
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
@@ -20,10 +17,16 @@ object ExchangeClientNetworking {
 
     fun sendOpenCreateOfferMenuPayload(pos: BlockPos) = ClientPlayNetworking.send(OpenCreateTradeMenuPayload(pos))
 
+    fun sendOpenShopInventoryMenuPayload(pos: BlockPos) = ClientPlayNetworking.send(OpenShopInventoryMenuPayload(pos))
+
     fun sendAddOfferPayload(pos: BlockPos, itemsGiving: List<ItemStack>, itemsReceiving: List<ItemStack>) =
         ClientPlayNetworking.send(AddOfferPayload(pos, itemsGiving, itemsReceiving))
 
     fun sendTradeRequestPayload(targetUuid: UUID) = ClientPlayNetworking.send(TradeRequestPayload(targetUuid))
+
+    fun sendSetShopOpenStatusPayload(newStatus: Boolean, pos: BlockPos) = ClientPlayNetworking.send(
+        SetShopOpenStatusPayload(newStatus, pos)
+    )
 
     private fun syncExchangeOffersPayloadReceiver() = ClientPlayNetworking.registerGlobalReceiver(
         SyncExchangeOffersPayload.TYPE
