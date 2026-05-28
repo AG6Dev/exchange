@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.players.NameAndId
 import net.minecraft.util.datafix.DataFixTypes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
@@ -17,7 +18,12 @@ class ExchangeOffersSavedData : SavedData() {
 
     fun getAllOffers(): List<ExchangeOffer> = offers.toList()
 
-    fun addOffer(seller: UUID, terminalLocation: BlockPos, offeredItems: List<ItemStack>, receivingItems: List<ItemStack>) {
+    fun addOffer(
+        seller: NameAndId,
+        terminalLocation: BlockPos,
+        offeredItems: List<ItemStack>,
+        receivingItems: List<ItemStack>
+    ) {
         offers.add(
             ExchangeOffer(
                 seller,

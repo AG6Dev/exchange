@@ -28,8 +28,16 @@ class OfferSelectionList(
         }
     }
 
-    override fun getNextY(): Int {
-        return super.getNextY() + 8
+    override fun getRowWidth(): Int {
+        return CARD_WIDTH
+    }
+
+    override fun getRowLeft(): Int {
+        return x + ROW_LEFT_PADDING
+    }
+
+    override fun scrollBarX(): Int {
+        return right - 6
     }
 
     class ListEntry(private val offer: ExchangeOffer) : Entry<ListEntry>() {
@@ -37,20 +45,18 @@ class OfferSelectionList(
             guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int, isHovering: Boolean, partialTick: Float
         ) {
             val textRenderer = Minecraft.getInstance().font
-            val cardX = getActualX()
 
             guiGraphics.blit(
-                RenderPipelines.GUI_TEXTURED, TEXTURE, cardX, contentY, 0f, 0f, CARD_WIDTH, CARD_HEIGHT, 256, 256
+                RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0f, 0f, CARD_WIDTH, CARD_HEIGHT, 256, 256
             )
 
-            renderItems(guiGraphics, mouseX, mouseY, cardX + ITEM_ROW_X, contentY + TOP_ROW_Y, offer.offeredItems)
-            renderItems(guiGraphics, mouseX, mouseY, cardX + ITEM_ROW_X, contentY + BOTTOM_ROW_Y, offer.receivingItems)
+            renderItems(guiGraphics, mouseX, mouseY, x + ITEM_ROW_X, y + TOP_ROW_Y, offer.offeredItems)
+            renderItems(guiGraphics, mouseX, mouseY, x + ITEM_ROW_X, y + BOTTOM_ROW_Y, offer.receivingItems)
 
-            val sellerUsername = Minecraft.getInstance().services().nameToIdCache.get(offer.seller)
-            guiGraphics.drawString(textRenderer, sellerUsername.get().name, x + 122, y + 11, -12566464, false)
-            guiGraphics.drawString(textRenderer, offer.location.toShortString(), x + 122, y + 22, -12566464, false)
+            guiGraphics.drawString(textRenderer, offer.seller.name, x + 102, y + 7, -12566464, false)
+            guiGraphics.drawString(textRenderer, offer.location.toShortString(), x + 102, y + 18, -12566464, false)
 
-            if (isHoveringArrow(mouseX, mouseY, cardX + 4, y + 10)) {
+            if (isHoveringArrow(mouseX, mouseY, x + 4, y + 10)) {
                 guiGraphics.renderTooltip(
                     textRenderer, listOf(
                         ClientTooltipComponent.create(
@@ -60,7 +66,7 @@ class OfferSelectionList(
                         )
                     ), mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null
                 )
-            } else if (isHoveringArrow(mouseX, mouseY, cardX + 4, y + 35)) {
+            } else if (isHoveringArrow(mouseX, mouseY, x + 4, y + 35)) {
                 guiGraphics.renderTooltip(
                     textRenderer, listOf(
                         ClientTooltipComponent.create(
@@ -72,8 +78,6 @@ class OfferSelectionList(
                 )
             }
         }
-
-        fun getActualX(): Int = x + CARD_X_OFFSET
 
         private fun renderItems(
             guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int, startX: Int, startY: Int, stacks: List<ItemStack>
@@ -139,11 +143,10 @@ class OfferSelectionList(
     }
 
     companion object {
-        const val ENTRY_HEIGHT = 65
-
+        private const val ENTRY_HEIGHT = 65
         private const val CARD_WIDTH = 179
         private const val CARD_HEIGHT = 57
-        private const val CARD_X_OFFSET = 21
+        private const val ROW_LEFT_PADDING = 6
         private const val ITEM_ROW_X = 26
         private const val TOP_ROW_Y = 8
         private const val BOTTOM_ROW_Y = 33

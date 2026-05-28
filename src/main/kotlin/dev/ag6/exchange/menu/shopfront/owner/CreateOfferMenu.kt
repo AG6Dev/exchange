@@ -5,7 +5,7 @@ import dev.ag6.exchange.init.BlockInit
 import dev.ag6.exchange.init.MenuTypeInit
 import dev.ag6.exchange.menu.CreateOfferFakeSlot
 import dev.ag6.exchange.network.BlockPosPayload
-import net.minecraft.core.NonNullList
+import net.minecraft.world.SimpleContainer
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -20,7 +20,7 @@ class CreateOfferMenu(containerId: Int, inventory: Inventory, val blockEntity: S
 
     private val access: ContainerLevelAccess = ContainerLevelAccess.create(blockEntity.level!!, blockEntity.blockPos)
 
-    private var items: NonNullList<ItemStack> = NonNullList.withSize(8, ItemStack.EMPTY)
+    private val previewItems = SimpleContainer(8)
 
     //client
     constructor(containerId: Int, inventory: Inventory, posPayload: BlockPosPayload) : this(
@@ -31,7 +31,7 @@ class CreateOfferMenu(containerId: Int, inventory: Inventory, val blockEntity: S
         //receiving items
         for (index in 0 until 4) {
             addSlot(
-                CreateOfferFakeSlot(index, 28 + (index * 18), 25, { items[index] }, setter = { items[index] = it })
+                CreateOfferFakeSlot(previewItems, index, 28 + (index * 18), 25)
             )
         }
 
@@ -40,38 +40,55 @@ class CreateOfferMenu(containerId: Int, inventory: Inventory, val blockEntity: S
             val actualIndex = index + 4
             addSlot(
                 CreateOfferFakeSlot(
+                    previewItems,
                     actualIndex,
                     28 + (index * 18),
-                    50,
-                    { items[actualIndex] },
-                    setter = { items[actualIndex] = it })
+                    50
+                )
             )
         }
 
         addStandardInventorySlots(inventory, 8, 84)
-
-        addInventoryHotbarSlots(inventory, 8, 142)
     }
 
     override fun clicked(slotId: Int, button: Int, clickType: ClickType, player: Player) {
         val slot = if (slotId >= 0 && slotId < slots.size) getSlot(slotId) else null
 
         if (slot is CreateOfferFakeSlot) {
-            if (clickType != ClickType.PICKUP) return
-
-            val carriedStack = carried
-
-            if (carriedStack.isEmpty) {
-                slot.set(ItemStack.EMPTY)
-            } else {
-                slot.set(carriedStack.copy())
-            }
-
+            handlePreviewSlotClick(slot, button, clickType, player)
             return
         }
 
         super.clicked(slotId, button, clickType, player)
     }
+
+    private fun handlePreviewSlotClick(slot: CreateOfferFakeSlot, button: Int, clickType: ClickType, player: Player) {
+        when (clickType) {
+            ClickType.PICKUP -> {
+                if (carried.isEmpty) {
+                    slot.clearPreview()
+                    return
+                }
+
+                val count = if (button == 1) 1 else carried.count
+                slot.setPreview(carried, count)
+            }
+
+            ClickType.SWAP -> {
+                val hotbarStack = player.inventory.getItem(button)
+                if (hotbarStack.isEmpty) {
+                    slot.clearPreview()
+                } else {
+                    slot.setPreview(hotbarStack)
+                }
+            }
+
+            ClickType.THROW -> slot.clearPreview()
+
+            else -> Unit
+        }
+    }
+
 
     override fun stillValid(player: Player): Boolean {
         return stillValid(access, player, BlockInit.SHOP_FRONT)

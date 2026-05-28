@@ -1,50 +1,43 @@
 package dev.ag6.exchange.menu
 
-import net.minecraft.world.SimpleContainer
+import net.minecraft.world.Container
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.ItemStack
 
 class CreateOfferFakeSlot(
+    container: Container,
     slot: Int,
     x: Int,
-    y: Int,
-    private val getter: () -> ItemStack = { ItemStack.EMPTY },
-    private val setter: (ItemStack) -> Unit = {}
-) : Slot(EMPTY_CONTAINER, slot, x, y) {
+    y: Int
+) : Slot(container, slot, x, y) {
 
-    override fun getItem(): ItemStack {
-        return getter()
-    }
+    override fun mayPlace(stack: ItemStack): Boolean = false
 
-    override fun remove(amount: Int): ItemStack {
-        set(ItemStack.EMPTY)
-        return ItemStack.EMPTY
-    }
+    override fun mayPickup(player: Player): Boolean = false
 
-    override fun set(stack: ItemStack) {
-        setter(stack)
-        setChanged()
-    }
-
-    override fun setChanged() {
-    }
+    override fun remove(amount: Int): ItemStack = ItemStack.EMPTY
 
     override fun safeInsert(stack: ItemStack, increment: Int): ItemStack {
-        return safeInsert(stack)
-    }
-
-    override fun safeInsert(stack: ItemStack): ItemStack {
-        if (!stack.isEmpty && mayPlace(stack)) {
-            setter(stack.copy())
-        }
         return stack
     }
 
-    override fun isFake(): Boolean {
-        return true
+    override fun safeInsert(stack: ItemStack): ItemStack {
+        return stack
     }
 
-    companion object {
-        private val EMPTY_CONTAINER = SimpleContainer(0)
+    fun setPreview(stack: ItemStack, count: Int = stack.count) {
+        if (stack.isEmpty) {
+            set(ItemStack.EMPTY)
+            return
+        }
+
+        val preview = stack.copy()
+        preview.count = count.coerceIn(1, preview.maxStackSize)
+        set(preview)
     }
+
+    fun clearPreview() = set(ItemStack.EMPTY)
+
+    override fun isFake(): Boolean = true
 }

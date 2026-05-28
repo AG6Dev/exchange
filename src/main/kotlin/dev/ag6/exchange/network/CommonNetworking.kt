@@ -95,7 +95,7 @@ object CommonNetworking {
 
             val saveData = ExchangeOffersSavedData.getSavedData(level)
 
-            saveData?.addOffer(player.uuid, payload.shopfrontPos, giving, wanting)
+            saveData?.addOffer(player.nameAndId(), payload.shopfrontPos, giving, wanting)
 
             sendSyncExchangeOffersPayload(player, saveData?.getAllOffers() ?: emptyList())
         }

@@ -1,6 +1,7 @@
 package dev.ag6.exchange.blockentity
 
 import dev.ag6.exchange.init.BlockEntityInit
+import dev.ag6.exchange.menu.shopfront.ShopFrontCustomerMenu
 import dev.ag6.exchange.menu.shopfront.owner.ShopFrontOwnerMenu
 import dev.ag6.exchange.network.BlockPosPayload
 import dev.ag6.exchange.network.CommonNetworking
@@ -71,7 +72,7 @@ class ShopFrontBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Block
         if (player.uuid == owner) {
             return ShopFrontOwnerMenu(i, inventory, this)
         }
-        return ShopFrontOwnerMenu(i, inventory, this)
+        return ShopFrontCustomerMenu(i, inventory, this)
     }
 
     override fun preRemoveSideEffects(pos: BlockPos, state: BlockState) {

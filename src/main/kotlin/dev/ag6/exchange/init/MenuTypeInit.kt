@@ -2,6 +2,7 @@ package dev.ag6.exchange.init
 
 import dev.ag6.exchange.Exchange
 import dev.ag6.exchange.menu.TradeMenu
+import dev.ag6.exchange.menu.shopfront.ShopFrontCustomerMenu
 import dev.ag6.exchange.menu.shopfront.owner.CreateOfferMenu
 import dev.ag6.exchange.menu.shopfront.owner.ShopFrontInventoryMenu
 import dev.ag6.exchange.menu.shopfront.owner.ShopFrontOwnerMenu
@@ -19,19 +20,19 @@ object MenuTypeInit {
     val TRADE: MenuType<TradeMenu> = register("trade", ::TradeMenu)
 
     val SHOP_FRONT_OWNER: MenuType<ShopFrontOwnerMenu> = register(
-        "shop_front_owner", ::ShopFrontOwnerMenu,
-        BlockPosPayload.STREAM_CODEC
+        "shop_front_owner", ::ShopFrontOwnerMenu, BlockPosPayload.STREAM_CODEC
     )
 
     val CREATE_TRADE: MenuType<CreateOfferMenu> = register(
-        "create_offer",
-        ::CreateOfferMenu,
-        BlockPosPayload.STREAM_CODEC
+        "create_offer", ::CreateOfferMenu, BlockPosPayload.STREAM_CODEC
     )
 
     val SHOP_FRONT_INVENTORY: MenuType<ShopFrontInventoryMenu> = register(
-        "shop_front_inventory", ::ShopFrontInventoryMenu,
-        BlockPosPayload.STREAM_CODEC
+        "shop_front_inventory", ::ShopFrontInventoryMenu, BlockPosPayload.STREAM_CODEC
+    )
+
+    val SHOP_FRONT_CUSTOMER: MenuType<ShopFrontCustomerMenu> = register(
+        "shop_front_customer", ::ShopFrontCustomerMenu, BlockPosPayload.STREAM_CODEC
     )
 
     private fun <T : AbstractContainerMenu, D : Any> register(

@@ -1,22 +1,18 @@
 package dev.ag6.exchange.menu.shopfront.owner
 
 import dev.ag6.exchange.blockentity.ShopFrontBlockEntity
-import dev.ag6.exchange.init.BlockInit
 import dev.ag6.exchange.init.MenuTypeInit
+import dev.ag6.exchange.menu.shopfront.ShopFrontMenu
 import dev.ag6.exchange.network.BlockPosPayload
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.ItemStack
 
-class ShopFrontInventoryMenu(containerId: Int, playerInventory: Inventory, val blockEntity: ShopFrontBlockEntity) :
-    AbstractContainerMenu(
-        MenuTypeInit.SHOP_FRONT_INVENTORY, containerId
+class ShopFrontInventoryMenu(containerId: Int, playerInventory: Inventory, blockEntity: ShopFrontBlockEntity) :
+    ShopFrontMenu(
+        MenuTypeInit.SHOP_FRONT_INVENTORY, playerInventory, containerId, blockEntity
     ) {
-    private val access: ContainerLevelAccess =
-        ContainerLevelAccess.create(playerInventory.player.level(), blockEntity.blockPos)
 
     constructor(containerId: Int, playerInventory: Inventory, posPayload: BlockPosPayload) : this(
         containerId,
@@ -64,9 +60,5 @@ class ShopFrontInventoryMenu(containerId: Int, playerInventory: Inventory, val b
             }
         }
         return itemStack
-    }
-
-    override fun stillValid(player: Player): Boolean {
-        return stillValid(access, player, BlockInit.SHOP_FRONT)
     }
 }

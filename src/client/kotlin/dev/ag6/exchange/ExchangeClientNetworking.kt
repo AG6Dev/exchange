@@ -2,12 +2,15 @@ package dev.ag6.exchange
 
 import dev.ag6.exchange.network.*
 import dev.ag6.exchange.offer.ExchangeOffer
+import dev.ag6.exchange.screen.shopfront.ShopFrontScreen
 import dev.ag6.exchange.screen.shopfront.owner.ShopFrontOwnerScreen
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.ItemStack
 import java.util.*
 
+
+//TODO: Add a generic "open menu" payload instead of creating a new payload for each menu
 object ExchangeClientNetworking {
     val offersCache: MutableList<ExchangeOffer> = mutableListOf()
 
@@ -36,7 +39,7 @@ object ExchangeClientNetworking {
         offersCache.addAll(payload.offers)
 
         val screen = context.client().screen
-        if (screen is ShopFrontOwnerScreen) {
+        if (screen is ShopFrontOwnerScreen || screen is ShopFrontScreen<*>) {
             screen.refreshOfferList()
         }
     }

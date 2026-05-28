@@ -28,7 +28,7 @@ class CreateOfferScreen(menu: CreateOfferMenu, inventory: Inventory, title: Comp
         }.bounds(leftPos + 116, topPos + 24, 46, 18).build())
 
         addRenderableWidget(Button.builder(Exchange.translatable("container", "create_offer.cancel")) {
-            onClose() //reopen the shopfront owner menu
+            onClose()
         }.bounds(leftPos + 116, topPos + 49, 46, 18).build())
     }
 
