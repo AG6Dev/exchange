@@ -1,6 +1,7 @@
 package dev.ag6.exchange.block
 
 import com.mojang.serialization.MapCodec
+import dev.ag6.exchange.Exchange
 import dev.ag6.exchange.blockentity.ShopFrontBlockEntity
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
@@ -24,11 +25,13 @@ class ShopFrontBlock(properties: Properties) : BaseEntityBlock(properties) {
             if (blockEntity is ShopFrontBlockEntity) {
                 if (blockEntity.owner == null) blockEntity.owner = player.uuid
 
-                player.openMenu(blockEntity)
+                if (blockEntity.isOpen || blockEntity.owner == player.uuid) {
+                    player.openMenu(blockEntity)
+                } else {
+                    player.displayClientMessage(Exchange.translatable("block", "shop_front.closed"), true)
+                }
             }
         }
-
-
         return InteractionResult.SUCCESS
     }
 

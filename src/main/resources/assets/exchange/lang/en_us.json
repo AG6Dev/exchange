@@ -6,7 +6,7 @@
   "container.exchange.trade.partner_left": "Trade closed because the other player left the trade.",
   "message.exchange.trade.occupied": "This player is currently trading with someone else.",
   "message.exchange.trade.distance": "Move closer to the player you want to trade with.",
-
+  "block.exchange.shop_front.closed": "This shop is currently closed.",
   "container.exchange.shop_front": "Shop Front",
   "container.exchange.shop_front.search_prompt": "Search for items...",
   "container.exchange.shop_front_owner.create_trade": "Create Trade",

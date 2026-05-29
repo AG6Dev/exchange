@@ -49,7 +49,7 @@ class ShopFrontBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Block
             update()
         }
     }
-    var isOpen: Boolean = false
+    var isOpen: Boolean = true
         set(value) {
             field = value
             this.update()

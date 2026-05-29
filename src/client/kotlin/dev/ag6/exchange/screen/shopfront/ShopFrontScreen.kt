@@ -3,11 +3,13 @@ package dev.ag6.exchange.screen.shopfront
 import dev.ag6.exchange.Exchange
 import dev.ag6.exchange.ExchangeClientNetworking
 import dev.ag6.exchange.menu.shopfront.ShopFrontMenu
+import dev.ag6.exchange.offer.ExchangeOffer
 import dev.ag6.exchange.screen.widget.OfferSelectionList
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.EditBox
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.world.entity.player.Inventory
@@ -38,6 +40,7 @@ abstract class ShopFrontScreen<T : ShopFrontMenu>(
             searchBox = EditBox(
                 font, leftPos + 8, topPos + 20, 198, 20, Exchange.translatable("container", "shop_front.search_prompt")
             )
+            searchBox.setResponder(::onSearchChanged)
             offerList = OfferSelectionList(minecraft, leftPos + 8, topPos + 48, 198, 140)
             refreshOfferList()
 
@@ -71,10 +74,7 @@ abstract class ShopFrontScreen<T : ShopFrontMenu>(
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
         if (::offerList.isInitialized && offerList.isMouseOver(mouseX, mouseY) && offerList.mouseScrolled(
-                mouseX,
-                mouseY,
-                scrollX,
-                scrollY
+                mouseX, mouseY, scrollX, scrollY
             )
         ) {
             return true
@@ -83,9 +83,41 @@ abstract class ShopFrontScreen<T : ShopFrontMenu>(
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
     }
 
-    fun refreshOfferList() {
+    fun refreshOfferList(newQuery: String? = null) {
         if (::offerList.isInitialized) {
-            offerList.setOffers(ExchangeClientNetworking.offersCache.filter { it.location == menu.blockEntity.blockPos })
+            val offers = filterCachedOffersWithSearch(newQuery ?: searchBox.value)
+            offerList.setOffers(offers)
         }
     }
+
+    private fun onSearchChanged(query: String) {
+        refreshOfferList(newQuery = query)
+    }
+
+    private fun filterCachedOffersWithSearch(query: String): List<ExchangeOffer> {
+        val shopOffers = ExchangeClientNetworking.offersCache.filter { it.location == menu.blockEntity.blockPos }
+
+        if (query.isEmpty()) return shopOffers
+
+        val matching: MutableList<ExchangeOffer> = mutableListOf()
+        for (offer in shopOffers) {
+            val playerFilter =
+                offer.seller.name.contains(query, true) || offer.seller.id.toString().contains(query, true)
+
+            val offeredFilter = offer.offeredItems.any { stack ->
+                BuiltInRegistries.ITEM.getKey(stack.item).toString().contains(query, true)
+            }
+            val receivingFilter = offer.receivingItems.any { stack ->
+                BuiltInRegistries.ITEM.getKey(stack.item).toString().contains(query, true)
+            }
+
+            if (playerFilter || offeredFilter || receivingFilter) {
+                matching.add(offer)
+            }
+        }
+
+        return matching
+    }
+
+
 }
