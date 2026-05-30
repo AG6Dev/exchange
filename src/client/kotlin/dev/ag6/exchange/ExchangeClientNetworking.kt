@@ -18,9 +18,8 @@ object ExchangeClientNetworking {
         registerClientReceivers()
     }
 
-    fun sendOpenCreateOfferMenuPayload(pos: BlockPos) = ClientPlayNetworking.send(OpenCreateTradeMenuPayload(pos))
-
-    fun sendOpenShopInventoryMenuPayload(pos: BlockPos) = ClientPlayNetworking.send(OpenShopInventoryMenuPayload(pos))
+    fun sendOpenCompleteTradeMenuPayload(pos: BlockPos, offerId: UUID) =
+        ClientPlayNetworking.send(OpenCompleteTradeMenuPayload(pos, offerId))
 
     fun sendAddOfferPayload(pos: BlockPos, itemsGiving: List<ItemStack>, itemsReceiving: List<ItemStack>) =
         ClientPlayNetworking.send(AddOfferPayload(pos, itemsGiving, itemsReceiving))

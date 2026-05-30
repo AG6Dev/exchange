@@ -15,10 +15,10 @@ class ShopFrontOwnerScreen(menu: ShopFrontOwnerMenu, inventory: Inventory, title
         super.init()
 
         addRenderableWidget(Button.builder(Exchange.translatable("container", "shop_front_owner.view_inventory")) {
-            ExchangeClientNetworking.sendOpenShopInventoryMenuPayload(menu.blockEntity.blockPos)
+            minecraft.gameMode?.handleInventoryButtonClick(menu.containerId, ShopFrontOwnerMenu.BUTTON_VIEW_INVENTORY)
         }.bounds(leftPos + 214, topPos + 20, 90, 20).build())
         addRenderableWidget(Button.builder(Exchange.translatable("container", "shop_front_owner.create_trade")) {
-            ExchangeClientNetworking.sendOpenCreateOfferMenuPayload(menu.blockEntity.blockPos)
+            minecraft.gameMode?.handleInventoryButtonClick(menu.containerId, ShopFrontOwnerMenu.BUTTON_CREATE_OFFER)
         }.bounds(leftPos + 214, topPos + 48, 90, 20).build())
         addRenderableWidget(
             Button.builder(

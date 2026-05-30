@@ -1,8 +1,7 @@
-package dev.ag6.exchange.screen.shopfront.owner
+package dev.ag6.exchange.screen.shopfront
 
 import dev.ag6.exchange.Exchange
-import dev.ag6.exchange.ExchangeClientNetworking
-import dev.ag6.exchange.menu.shopfront.owner.CreateOfferMenu
+import dev.ag6.exchange.menu.shopfront.CompleteTradeMenu
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -10,25 +9,17 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.player.Inventory
 
-class CreateOfferScreen(menu: CreateOfferMenu, inventory: Inventory, title: Component) :
-    AbstractContainerScreen<CreateOfferMenu>(menu, inventory, title) {
+class CompleteTradeScreen(menu: CompleteTradeMenu, playerInventory: Inventory, title: Component) :
+    AbstractContainerScreen<CompleteTradeMenu>(menu, playerInventory, title) {
     override fun init() {
         super.init()
 
-        addRenderableWidget(Button.builder(Exchange.translatable("container", "create_offer.confirm")) {
-            val itemsReceiving = (0 until 4)
-                .map { menu.getSlot(it).item.copy() }
-                .filter { !it.isEmpty }
-
-            val itemsGiving = (4 until 8)
-                .map { menu.getSlot(it).item.copy() }
-                .filter { !it.isEmpty }
-
-            ExchangeClientNetworking.sendAddOfferPayload(menu.blockEntity.blockPos, itemsGiving, itemsReceiving)
+        addRenderableWidget(Button.builder(Exchange.translatable("container", "complete_trade.confirm")) {
+            minecraft.gameMode?.handleInventoryButtonClick(menu.containerId, CompleteTradeMenu.BUTTON_CONFIRM_ID)
         }.bounds(leftPos + 116, topPos + 24, 46, 18).build())
 
-        addRenderableWidget(Button.builder(Exchange.translatable("container", "create_offer.cancel")) {
-            minecraft.gameMode?.handleInventoryButtonClick(menu.containerId, CreateOfferMenu.BUTTON_CANCEL_ID)
+        addRenderableWidget(Button.builder(Exchange.translatable("container", "complete_trade.cancel")) {
+            minecraft.gameMode?.handleInventoryButtonClick(menu.containerId, CompleteTradeMenu.BUTTON_CANCEL_ID)
         }.bounds(leftPos + 116, topPos + 49, 46, 18).build())
     }
 
@@ -50,6 +41,11 @@ class CreateOfferScreen(menu: CreateOfferMenu, inventory: Inventory, title: Comp
             256,
             256
         )
+    }
+
+    override fun render(guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int, partialTick: Float) {
+        super.render(guiGraphics, mouseX, mouseY, partialTick)
+        renderTooltip(guiGraphics, mouseX, mouseY)
     }
 
     companion object {

@@ -11,11 +11,17 @@ import net.minecraft.client.gui.narration.NarratableEntry
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner
+import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.world.item.ItemStack
 
 class OfferSelectionList(
-    mc: Minecraft, x: Int, y: Int, width: Int, height: Int
+    mc: Minecraft,
+    x: Int,
+    y: Int,
+    width: Int,
+    height: Int,
+    private val onOfferSelected: ((ExchangeOffer) -> Unit)? = null
 ) : ContainerObjectSelectionList<OfferSelectionList.ListEntry>(mc, width, height, y, ENTRY_HEIGHT) {
     init {
         this.setPosition(x, y)
@@ -24,7 +30,7 @@ class OfferSelectionList(
     fun setOffers(offers: List<ExchangeOffer>) {
         clearEntries()
         offers.forEach { offer ->
-            addEntry(ListEntry(offer))
+            addEntry(ListEntry(offer, onOfferSelected))
         }
     }
 
@@ -40,7 +46,19 @@ class OfferSelectionList(
         return right - 6
     }
 
-    class ListEntry(private val offer: ExchangeOffer) : Entry<ListEntry>() {
+    class ListEntry(
+        private val offer: ExchangeOffer,
+        private val onOfferSelected: ((ExchangeOffer) -> Unit)?
+    ) : Entry<ListEntry>() {
+
+        override fun mouseClicked(event: MouseButtonEvent, isDoubleClick: Boolean): Boolean {
+            if (event.button() == 0) {
+                onOfferSelected?.invoke(offer)
+                return onOfferSelected != null
+            }
+            return false
+        }
+
         override fun renderContent(
             guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int, isHovering: Boolean, partialTick: Float
         ) {

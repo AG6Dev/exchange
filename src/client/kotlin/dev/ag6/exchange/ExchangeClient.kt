@@ -3,6 +3,7 @@ package dev.ag6.exchange
 import dev.ag6.exchange.init.KeyMappingInit
 import dev.ag6.exchange.init.MenuTypeInit
 import dev.ag6.exchange.screen.TradeScreen
+import dev.ag6.exchange.screen.shopfront.CompleteTradeScreen
 import dev.ag6.exchange.screen.shopfront.ShopFrontCustomerScreen
 import dev.ag6.exchange.screen.shopfront.owner.CreateOfferScreen
 import dev.ag6.exchange.screen.shopfront.owner.ShopFrontInventoryScreen
@@ -36,5 +37,6 @@ object ExchangeClient : ClientModInitializer {
         MenuScreens.register(MenuTypeInit.CREATE_TRADE, ::CreateOfferScreen)
         MenuScreens.register(MenuTypeInit.SHOP_FRONT_INVENTORY, ::ShopFrontInventoryScreen)
         MenuScreens.register(MenuTypeInit.SHOP_FRONT_CUSTOMER, ::ShopFrontCustomerScreen)
+        MenuScreens.register(MenuTypeInit.COMPLETE_TRADE, ::CompleteTradeScreen)
     }
 }

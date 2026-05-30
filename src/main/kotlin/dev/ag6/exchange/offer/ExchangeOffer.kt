@@ -9,8 +9,10 @@ import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.server.players.NameAndId
 import net.minecraft.world.item.ItemStack
+import java.util.*
 
 data class ExchangeOffer(
+    val id: UUID,
     val seller: NameAndId,
     val location: BlockPos,
     val offeredItems: List<ItemStack>,
@@ -26,6 +28,8 @@ data class ExchangeOffer(
         )
 
         val STREAM_CODEC: StreamCodec<RegistryFriendlyByteBuf, ExchangeOffer> = StreamCodec.composite(
+            UUIDUtil.STREAM_CODEC,
+            ExchangeOffer::id,
             NAME_AND_ID_STREAM_CODEC,
             ExchangeOffer::seller,
             BlockPos.STREAM_CODEC,
@@ -39,13 +43,12 @@ data class ExchangeOffer(
 
         val CODEC: Codec<ExchangeOffer> = RecordCodecBuilder<ExchangeOffer>.create { inst ->
             inst.group(
+                UUIDUtil.CODEC.fieldOf("id").forGetter { it.id },
                 NameAndId.CODEC.fieldOf("seller").forGetter { it.seller },
                 BlockPos.CODEC.fieldOf("location").forGetter { it.location },
                 Codec.list(ItemStack.CODEC).fieldOf("offeredItems").forGetter { it.offeredItems },
                 Codec.list(ItemStack.CODEC).fieldOf("receivingItems").forGetter { it.receivingItems }
-            ).apply(inst) { seller, terminalLocation, offeredItems, receivingItems ->
-                ExchangeOffer(seller, terminalLocation, offeredItems, receivingItems)
-            }
+            ).apply(inst, ::ExchangeOffer)
         }
     }
 }

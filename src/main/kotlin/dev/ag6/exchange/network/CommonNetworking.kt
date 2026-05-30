@@ -2,8 +2,7 @@ package dev.ag6.exchange.network
 
 import dev.ag6.exchange.Exchange
 import dev.ag6.exchange.blockentity.ShopFrontBlockEntity
-import dev.ag6.exchange.menu.shopfront.owner.CreateOfferMenu
-import dev.ag6.exchange.menu.shopfront.owner.ShopFrontInventoryMenu
+import dev.ag6.exchange.menu.shopfront.CompleteTradeMenu
 import dev.ag6.exchange.offer.ExchangeOffer
 import dev.ag6.exchange.offer.ExchangeOffersSavedData
 import dev.ag6.exchange.trade.TradeManager
@@ -31,9 +30,8 @@ object CommonNetworking {
     private fun registerC2SPayloads() {
         PayloadTypeRegistry.playC2S().register(TradeRequestPayload.TYPE, TradeRequestPayload.STREAM_CODEC)
         PayloadTypeRegistry.playC2S().register(AddOfferPayload.TYPE, AddOfferPayload.STREAM_CODEC)
-        PayloadTypeRegistry.playC2S().register(OpenCreateTradeMenuPayload.TYPE, OpenCreateTradeMenuPayload.STREAM_CODEC)
         PayloadTypeRegistry.playC2S()
-            .register(OpenShopInventoryMenuPayload.TYPE, OpenShopInventoryMenuPayload.STREAM_CODEC)
+            .register(OpenCompleteTradeMenuPayload.TYPE, OpenCompleteTradeMenuPayload.STREAM_CODEC)
         PayloadTypeRegistry.playC2S().register(SetShopOpenStatusPayload.TYPE, SetShopOpenStatusPayload.STREAM_CODEC)
     }
 
@@ -44,9 +42,8 @@ object CommonNetworking {
     private fun registerServerReceivers() {
         tradeRequestPayloadReceiver()
         addOfferPayloadReceiver()
-        openCreateMenuPayloadReceiver()
+        openCompleteTradeMenuPayloadReceiver()
         setShopOpenStatusReceiver()
-        openShopInventoryMenuReceiver()
     }
 
     private fun tradeRequestPayloadReceiver() =
@@ -100,35 +97,6 @@ object CommonNetworking {
             sendSyncExchangeOffersPayload(player, saveData?.getAllOffers() ?: emptyList())
         }
 
-    private fun openCreateMenuPayloadReceiver() =
-        ServerPlayNetworking.registerGlobalReceiver(OpenCreateTradeMenuPayload.TYPE) { payload, context ->
-            val player = context.player()
-            val level = player.level()
-            val blockEntity = level.getBlockEntity(payload.shopfrontPos)
-
-            if (blockEntity is ShopFrontBlockEntity) {
-                if (!blockEntity.isOwner(player)) return@registerGlobalReceiver
-
-                val provider = object : ExtendedScreenHandlerFactory<BlockPosPayload> {
-                    override fun getScreenOpeningData(player: ServerPlayer): BlockPosPayload {
-                        return BlockPosPayload(payload.shopfrontPos)
-                    }
-
-                    override fun getDisplayName(): Component {
-                        return Exchange.translatable("container", "shop_front_owner.create_trade")
-                    }
-
-                    override fun createMenu(
-                        i: Int, inventory: Inventory, player: Player
-                    ): AbstractContainerMenu {
-                        return CreateOfferMenu(i, inventory, blockEntity)
-                    }
-                }
-
-                player.openMenu(provider)
-            }
-        }
-
     private fun setShopOpenStatusReceiver() =
         ServerPlayNetworking.registerGlobalReceiver(SetShopOpenStatusPayload.TYPE) { payload, context ->
             val player = context.player()
@@ -142,32 +110,36 @@ object CommonNetworking {
             }
         }
 
-    private fun openShopInventoryMenuReceiver() =
-        ServerPlayNetworking.registerGlobalReceiver(OpenShopInventoryMenuPayload.TYPE) { payload, context ->
+    private fun openCompleteTradeMenuPayloadReceiver() =
+        ServerPlayNetworking.registerGlobalReceiver(OpenCompleteTradeMenuPayload.TYPE) { payload, context ->
             val player = context.player()
             val level = player.level()
             val blockEntity = level.getBlockEntity(payload.shopfrontPos)
 
             if (blockEntity is ShopFrontBlockEntity) {
-                if (!blockEntity.isOwner(player)) return@registerGlobalReceiver
+                if (!blockEntity.isOpen || blockEntity.isOwner(player)) return@registerGlobalReceiver
+                if (!player.isWithinBlockInteractionRange(payload.shopfrontPos, 4.0)) return@registerGlobalReceiver
+                val savedData = ExchangeOffersSavedData.getSavedData(level) ?: return@registerGlobalReceiver
+                val offer = savedData.getOfferAt(payload.shopfrontPos, payload.offerId) ?: return@registerGlobalReceiver
 
-                val provider = object : ExtendedScreenHandlerFactory<BlockPosPayload> {
-                    override fun getScreenOpeningData(player: ServerPlayer): BlockPosPayload {
-                        return BlockPosPayload(payload.shopfrontPos)
+                val provider = object : ExtendedScreenHandlerFactory<OpenCompleteTradeMenuPayload> {
+                    override fun getScreenOpeningData(player: ServerPlayer): OpenCompleteTradeMenuPayload {
+                        return OpenCompleteTradeMenuPayload(payload.shopfrontPos, payload.offerId)
                     }
 
                     override fun getDisplayName(): Component {
-                        return Exchange.translatable("container", "shop_front_owner.inventory")
+                        return Exchange.translatable("container", "complete_trade")
                     }
 
                     override fun createMenu(
                         i: Int, inventory: Inventory, player: Player
                     ): AbstractContainerMenu {
-                        return ShopFrontInventoryMenu(i, inventory, blockEntity)
+                        return CompleteTradeMenu(i, inventory, blockEntity, offer.id, offer)
                     }
                 }
 
                 player.openMenu(provider)
             }
         }
+
 }

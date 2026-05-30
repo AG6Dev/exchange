@@ -24,7 +24,8 @@ abstract class ShopFrontScreen<T : ShopFrontMenu>(
     private val textureWidth: Int = 512,
     private val textureHeight: Int = 512,
     private val renderInventoryLabel: Boolean = false,
-    private val showWidgets: Boolean = true
+    private val showWidgets: Boolean = true,
+    private val onOfferSelected: ((ExchangeOffer) -> Unit)? = null
 ) : AbstractContainerScreen<T>(menu, inventory, title) {
 
     lateinit var searchBox: EditBox
@@ -41,7 +42,7 @@ abstract class ShopFrontScreen<T : ShopFrontMenu>(
                 font, leftPos + 8, topPos + 20, 198, 20, Exchange.translatable("container", "shop_front.search_prompt")
             )
             searchBox.setResponder(::onSearchChanged)
-            offerList = OfferSelectionList(minecraft, leftPos + 8, topPos + 48, 198, 140)
+            offerList = OfferSelectionList(minecraft, leftPos + 8, topPos + 48, 198, 140, onOfferSelected)
             refreshOfferList()
 
             addRenderableWidget(searchBox)

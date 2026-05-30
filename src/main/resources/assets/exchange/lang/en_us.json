@@ -19,6 +19,15 @@
   "container.exchange.create_offer": "Create Offer",
   "container.exchange.create_offer.cancel": "Cancel",
   "container.exchange.create_offer.confirm": "Confirm",
+  "container.exchange.complete_trade": "Complete Trade",
+  "container.exchange.complete_trade.cancel": "Cancel",
+  "container.exchange.complete_trade.confirm": "Confirm",
+  "message.exchange.complete_trade.complete": "Trade completed.",
+  "message.exchange.complete_trade.inventory_full": "You do not have enough room for this trade.",
+  "message.exchange.complete_trade.missing_items": "You do not have the required items.",
+  "message.exchange.complete_trade.offer_unavailable": "This offer is no longer available.",
+  "message.exchange.complete_trade.shop_full": "The shop does not have enough room for this trade.",
+  "message.exchange.complete_trade.shop_missing_items": "The shop no longer has the offered items.",
   "container.exchange.widget.offer_arrow_selling": "Items Selling",
   "container.exchange.widget.offer_arrow_wanted": "Items Wanted"
 }

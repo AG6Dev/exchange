@@ -26,6 +26,7 @@ class ExchangeOffersSavedData : SavedData() {
     ) {
         offers.add(
             ExchangeOffer(
+                UUID.randomUUID(),
                 seller,
                 terminalLocation.immutable(),
                 offeredItems.map(ItemStack::copy),
@@ -41,6 +42,18 @@ class ExchangeOffersSavedData : SavedData() {
         }
 
         setDirty()
+    }
+
+    fun getOffer(id: UUID): ExchangeOffer? {
+        return offers.firstOrNull { it.id == id }
+    }
+
+    fun getOfferAt(terminalLocation: BlockPos, id: UUID): ExchangeOffer? {
+        return offers.firstOrNull { it.id == id && it.location == terminalLocation }
+    }
+
+    fun hasOffer(id: UUID): Boolean {
+        return getOffer(id) != null
     }
 
     companion object {

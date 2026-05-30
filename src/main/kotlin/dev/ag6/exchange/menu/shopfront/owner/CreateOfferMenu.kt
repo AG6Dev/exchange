@@ -5,6 +5,7 @@ import dev.ag6.exchange.init.BlockInit
 import dev.ag6.exchange.init.MenuTypeInit
 import dev.ag6.exchange.menu.CreateOfferFakeSlot
 import dev.ag6.exchange.network.BlockPosPayload
+import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
@@ -85,8 +86,19 @@ class CreateOfferMenu(containerId: Int, inventory: Inventory, val blockEntity: S
 
             ClickType.THROW -> slot.clearPreview()
 
-            else -> Unit
+            else -> return
         }
+    }
+
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
+        val serverPlayer = player as? ServerPlayer ?: return false
+
+        if (id == BUTTON_CANCEL_ID) {
+            serverPlayer.openMenu(blockEntity)
+            return true
+        }
+
+        return false
     }
 
 
@@ -98,5 +110,9 @@ class CreateOfferMenu(containerId: Int, inventory: Inventory, val blockEntity: S
         player: Player, index: Int
     ): ItemStack {
         return ItemStack.EMPTY
+    }
+
+    companion object {
+        const val BUTTON_CANCEL_ID = 0
     }
 }
