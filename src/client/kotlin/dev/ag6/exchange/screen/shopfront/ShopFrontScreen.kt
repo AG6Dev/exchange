@@ -8,11 +8,13 @@ import dev.ag6.exchange.screen.widget.OfferSelectionList
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.EditBox
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.item.ItemStack
 
 abstract class ShopFrontScreen<T : ShopFrontMenu>(
     menu: T,
@@ -44,6 +46,7 @@ abstract class ShopFrontScreen<T : ShopFrontMenu>(
             searchBox.setResponder(::onSearchChanged)
             offerList = OfferSelectionList(minecraft, leftPos + 8, topPos + 48, 198, 140, onOfferSelected)
             refreshOfferList()
+            ExchangeClientNetworking.sendSubscribeShopOffersPayload(menu.blockEntity.blockPos)
 
             addRenderableWidget(searchBox)
             addRenderableWidget(offerList)
@@ -84,6 +87,20 @@ abstract class ShopFrontScreen<T : ShopFrontMenu>(
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
     }
 
+    override fun keyPressed(event: KeyEvent): Boolean {
+        if (::searchBox.isInitialized && searchBox.canConsumeInput()) {
+            if (searchBox.keyPressed(event)) {
+                return true
+            }
+
+            if (minecraft.options.keyInventory.matches(event)) {
+                return true
+            }
+        }
+
+        return super.keyPressed(event)
+    }
+
     fun refreshOfferList(newQuery: String? = null) {
         if (::offerList.isInitialized) {
             val offers = filterCachedOffersWithSearch(newQuery ?: searchBox.value)
@@ -93,10 +110,14 @@ abstract class ShopFrontScreen<T : ShopFrontMenu>(
 
     private fun onSearchChanged(query: String) {
         refreshOfferList(newQuery = query)
+
+        if (query.isNotBlank()) {
+            offerList.setScrollAmount(0.0)
+        }
     }
 
     private fun filterCachedOffersWithSearch(query: String): List<ExchangeOffer> {
-        val shopOffers = ExchangeClientNetworking.offersCache.filter { it.location == menu.blockEntity.blockPos }
+        val shopOffers = ExchangeClientNetworking.getCachedOffers(menu.blockEntity.blockPos)
 
         if (query.isEmpty()) return shopOffers
 
@@ -105,12 +126,8 @@ abstract class ShopFrontScreen<T : ShopFrontMenu>(
             val playerFilter =
                 offer.seller.name.contains(query, true) || offer.seller.id.toString().contains(query, true)
 
-            val offeredFilter = offer.offeredItems.any { stack ->
-                BuiltInRegistries.ITEM.getKey(stack.item).toString().contains(query, true)
-            }
-            val receivingFilter = offer.receivingItems.any { stack ->
-                BuiltInRegistries.ITEM.getKey(stack.item).toString().contains(query, true)
-            }
+            val offeredFilter = offer.offeredItems.any { stack -> stackMatchesSearch(stack, query) }
+            val receivingFilter = offer.receivingItems.any { stack -> stackMatchesSearch(stack, query) }
 
             if (playerFilter || offeredFilter || receivingFilter) {
                 matching.add(offer)
@@ -120,5 +137,13 @@ abstract class ShopFrontScreen<T : ShopFrontMenu>(
         return matching
     }
 
+    private fun stackMatchesSearch(stack: ItemStack, query: String): Boolean {
+        val itemId = BuiltInRegistries.ITEM.getKey(stack.item)
+
+        return itemId.toString().contains(query, true) ||
+                itemId.path.contains(query, true) ||
+                stack.hoverName.string.contains(query, true) ||
+                stack.itemName.string.contains(query, true)
+    }
 
 }

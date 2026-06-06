@@ -13,35 +13,57 @@ import net.minecraft.world.level.saveddata.SavedData
 import net.minecraft.world.level.saveddata.SavedDataType
 import java.util.*
 
+private data class ShopOfferRevision(val pos: BlockPos, val revision: Int) {
+    companion object {
+        val CODEC: Codec<ShopOfferRevision> = RecordCodecBuilder.create { inst ->
+            inst.group(
+                BlockPos.CODEC.fieldOf("pos").forGetter(ShopOfferRevision::pos),
+                Codec.INT.fieldOf("revision").forGetter(ShopOfferRevision::revision)
+            ).apply(inst, ::ShopOfferRevision)
+        }
+    }
+}
+
 class ExchangeOffersSavedData : SavedData() {
     private val offers: MutableList<ExchangeOffer> = mutableListOf()
+    private val revisionsByShop: MutableMap<BlockPos, Int> = mutableMapOf()
 
-    fun getAllOffers(): List<ExchangeOffer> = offers.toList()
+    fun getOffersAt(terminalLocation: BlockPos): List<ExchangeOffer> {
+        return offers.filter { it.location == terminalLocation }
+    }
+
+    fun getRevision(terminalLocation: BlockPos): Int {
+        return revisionsByShop[terminalLocation] ?: 0
+    }
 
     fun addOffer(
         seller: NameAndId,
         terminalLocation: BlockPos,
         offeredItems: List<ItemStack>,
         receivingItems: List<ItemStack>
-    ) {
-        offers.add(
-            ExchangeOffer(
-                UUID.randomUUID(),
-                seller,
-                terminalLocation.immutable(),
-                offeredItems.map(ItemStack::copy),
-                receivingItems.map(ItemStack::copy)
-            )
+    ): ExchangeOffer {
+        val offer = ExchangeOffer(
+            UUID.randomUUID(),
+            seller,
+            terminalLocation.immutable(),
+            offeredItems.map(ItemStack::copy),
+            receivingItems.map(ItemStack::copy)
         )
+
+        offers.add(offer)
+        incrementRevision(terminalLocation)
         setDirty()
+        return offer
     }
 
-    fun removeOffersAt(terminalLocation: BlockPos) {
+    fun removeOffersAt(terminalLocation: BlockPos): Int? {
         if (!offers.removeIf { it.location == terminalLocation }) {
-            return
+            return null
         }
 
+        val revision = incrementRevision(terminalLocation)
         setDirty()
+        return revision
     }
 
     fun getOffer(id: UUID): ExchangeOffer? {
@@ -56,13 +78,27 @@ class ExchangeOffersSavedData : SavedData() {
         return getOffer(id) != null
     }
 
+    private fun incrementRevision(terminalLocation: BlockPos): Int {
+        val immutablePos = terminalLocation.immutable()
+        val revision = (revisionsByShop[immutablePos] ?: 0) + 1
+        revisionsByShop[immutablePos] = revision
+        return revision
+    }
+
+    private fun revisionEntries(): List<ShopOfferRevision> {
+        return revisionsByShop.map { (pos, revision) -> ShopOfferRevision(pos, revision) }
+    }
+
     companion object {
         val CODEC: Codec<ExchangeOffersSavedData> = RecordCodecBuilder.create { inst ->
             inst.group(
-                Codec.list(ExchangeOffer.CODEC).fieldOf("offers").forGetter(ExchangeOffersSavedData::offers)
-            ).apply(inst) { storedOffers ->
+                Codec.list(ExchangeOffer.CODEC).fieldOf("offers").forGetter(ExchangeOffersSavedData::offers),
+                Codec.list(ShopOfferRevision.CODEC).optionalFieldOf("shopRevisions", emptyList())
+                    .forGetter(ExchangeOffersSavedData::revisionEntries)
+            ).apply(inst) { storedOffers, storedRevisions ->
                 ExchangeOffersSavedData().apply {
                     offers.addAll(storedOffers)
+                    revisionsByShop.putAll(storedRevisions.associate { it.pos.immutable() to it.revision })
                 }
             }
         }

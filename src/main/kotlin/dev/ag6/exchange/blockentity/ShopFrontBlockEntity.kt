@@ -65,10 +65,6 @@ class ShopFrontBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Block
     override fun createMenu(
         i: Int, inventory: Inventory, player: Player
     ): AbstractContainerMenu {
-        if (player is ServerPlayer) {
-            CommonNetworking.sendSyncExchangeOffersPayload(player, getOffers())
-        }
-
         if (player.uuid == owner) {
             return ShopFrontOwnerMenu(i, inventory, this)
         }
@@ -78,7 +74,10 @@ class ShopFrontBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Block
     override fun preRemoveSideEffects(pos: BlockPos, state: BlockState) {
         super.preRemoveSideEffects(pos, state)
 
-        ExchangeOffersSavedData.getSavedData(level)?.removeOffersAt(worldPosition)
+        val revision = ExchangeOffersSavedData.getSavedData(level)?.removeOffersAt(worldPosition)
+        if (revision != null) {
+            CommonNetworking.broadcastShopOffersCleared(level, worldPosition, revision)
+        }
         level?.let { Containers.dropContents(it, worldPosition, inventory) }
     }
 
@@ -115,8 +114,7 @@ class ShopFrontBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(Block
     }
 
     fun getOffers(): List<ExchangeOffer> {
-        return ExchangeOffersSavedData.getSavedData(this.level)?.getAllOffers()
-            ?.filter { it.location == this.worldPosition } ?: emptyList()
+        return ExchangeOffersSavedData.getSavedData(this.level)?.getOffersAt(this.worldPosition) ?: emptyList()
     }
 
     private fun update() {
